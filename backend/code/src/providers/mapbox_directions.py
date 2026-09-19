@@ -41,6 +41,7 @@ class MapboxDirectionsClient:
         params = {
             "geometries": "geojson",
             "overview": "full",
+            "steps": "false",
             "access_token": self.access_token,
         }
 

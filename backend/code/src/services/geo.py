@@ -67,6 +67,36 @@ def pad_bbox(
     )
 
 
+def pad_bbox_from_coordinates(
+    coordinates: list[tuple[float, float]],
+    pad_fraction: float = PAD_FRACTION,
+    min_pad_meters: float = MIN_PAD_METERS,
+) -> tuple[float, float, float, float]:
+    if len(coordinates) < 2:
+        raise ValueError("coordinates must include at least two points")
+    origin_lng, origin_lat = coordinates[0]
+    dest_lng, dest_lat = coordinates[-1]
+    west = min(point[0] for point in coordinates)
+    east = max(point[0] for point in coordinates)
+    south = min(point[1] for point in coordinates)
+    north = max(point[1] for point in coordinates)
+    distance = max(
+        haversine_meters(origin_lat, origin_lng, dest_lat, dest_lng),
+        haversine_meters(south, west, north, east),
+    )
+    pad_meters = max(min_pad_meters, distance * pad_fraction)
+    pad_lat = pad_meters / METERS_PER_DEGREE_LAT
+    mid_lat = (south + north) / 2
+    cos_lat = max(0.01, math.cos(to_radians(mid_lat)))
+    pad_lng = pad_meters / (METERS_PER_DEGREE_LAT * cos_lat)
+    return (
+        max(-180.0, west - pad_lng),
+        max(-90.0, south - pad_lat),
+        min(180.0, east + pad_lng),
+        min(90.0, north + pad_lat),
+    )
+
+
 def interpolate(start: float, end: float, t: float) -> float:
     return start + (end - start) * t
 

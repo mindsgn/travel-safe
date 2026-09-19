@@ -12,13 +12,14 @@ from src.providers.mapbox_directions import (
     MapboxDirectionsClient,
     MapboxDirectionsError,
 )
+from src.providers.osrm_directions import OsrmDirectionsClient, OsrmDirectionsError
 from src.providers.reference import ReferenceCrimeProvider
 from src.services.geo import (
     cell_relative_intensity,
     heatmap_grid_points,
     mock_duration_seconds,
     mock_pathway_coordinates,
-    pad_bbox,
+    pad_bbox_from_coordinates,
     pathway_distance_meters,
     point_in_bbox,
     points_along_pathway,
@@ -42,9 +43,11 @@ class TripService:
         self,
         provider: CrimeDataProvider | None = None,
         directions_client: MapboxDirectionsClient | None = None,
+        osrm_client: OsrmDirectionsClient | None = None,
     ) -> None:
         self.provider = provider or ReferenceCrimeProvider()
         self.directions = directions_client or MapboxDirectionsClient()
+        self.osrm = osrm_client or OsrmDirectionsClient()
 
     def plan(self, request: TripRequest) -> TripResponse:
         origin = request.origin
@@ -57,13 +60,8 @@ class TripService:
         ):
             raise TripValidationError("origin and destination must be different locations")
 
-        bbox = pad_bbox(
-            origin.latitude,
-            origin.longitude,
-            destination.latitude,
-            destination.longitude,
-        )
         pathway = self._pathway(origin, destination, request.profile)
+        bbox = pad_bbox_from_coordinates(pathway.coordinates)
         heatmap = self._heatmap(bbox, pathway.coordinates)
         return TripResponse(
             origin=origin,
@@ -89,6 +87,26 @@ class TripService:
                 )
             except MapboxDirectionsError:
                 pass
+        try:
+            return self.osrm.route(
+                origin.latitude,
+                origin.longitude,
+                destination.latitude,
+                destination.longitude,
+                profile,
+            )
+        except OsrmDirectionsError:
+            if profile == "walking":
+                try:
+                    return self.osrm.route(
+                        origin.latitude,
+                        origin.longitude,
+                        destination.latitude,
+                        destination.longitude,
+                        "driving",
+                    )
+                except OsrmDirectionsError:
+                    pass
         return self._mock_pathway(origin, destination, profile)
 
     def _mock_pathway(

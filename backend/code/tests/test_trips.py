@@ -9,6 +9,7 @@ from src.providers.mapbox_directions import (
     MapboxDirectionsClient,
     MapboxDirectionsError,
 )
+from src.providers.osrm_directions import OsrmDirectionsClient, OsrmDirectionsError
 from src.services.geo import (
     cell_relative_intensity,
     haversine_meters,
@@ -87,16 +88,18 @@ def test_cell_relative_intensity_is_deterministic() -> None:
     assert 0 <= first <= 1
 
 
-def test_create_trip_returns_mock_pathway_and_heatmap() -> None:
+def test_create_trip_returns_road_pathway_and_heatmap() -> None:
     response = client.post("/api/v1/trips", json={"origin": ORIGIN, "destination": DESTINATION})
 
     assert response.status_code == 200
     body = response.json()
     assert body["origin"]["label"] == "Cape Town CBD"
     assert body["destination"]["label"] == "Woodstock"
-    assert body["pathway"]["provider"] == "mock"
+    assert body["pathway"]["provider"] in {"osrm", "mapbox", "mock"}
     assert len(body["pathway"]["coordinates"]) >= 2
     assert body["pathway"]["distance_meters"] > 0
+    if body["pathway"]["provider"] != "mock":
+        assert len(body["pathway"]["coordinates"]) > 2
     assert len(body["heatmap"]["cells"]) >= 36
     west, south, east, north = body["heatmap"]["bbox"]
     for cell in body["heatmap"]["cells"]:
@@ -177,6 +180,50 @@ def test_mapbox_directions_client_parses_geojson_route() -> None:
     http_client.close()
 
 
+def test_osrm_directions_client_parses_geojson_route() -> None:
+    transport = httpx.MockTransport(
+        lambda request: httpx.Response(
+            200,
+            json={
+                "code": "Ok",
+                "routes": [
+                    {
+                        "distance": 2600,
+                        "duration": 480,
+                        "geometry": {
+                            "coordinates": [
+                                [18.4241, -33.9249],
+                                [18.4312, -33.9254],
+                                [18.4390, -33.9261],
+                                [18.4470, -33.9270],
+                            ],
+                        },
+                    }
+                ],
+            },
+        )
+    )
+    http_client = httpx.Client(transport=transport)
+    directions = OsrmDirectionsClient(http_client=http_client)
+    pathway = directions.route(-33.9249, 18.4241, -33.9270, 18.4470, "driving")
+    assert pathway.provider == "osrm"
+    assert len(pathway.coordinates) == 4
+    assert pathway.distance_meters == 2600
+    http_client.close()
+
+
+def test_osrm_directions_client_raises_on_error_payload() -> None:
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, json={"code": "NoRoute", "routes": []}))
+    http_client = httpx.Client(transport=transport)
+    directions = OsrmDirectionsClient(http_client=http_client)
+    try:
+        directions.route(-33.92, 18.42, -33.93, 18.45, "driving")
+        raise AssertionError("expected OsrmDirectionsError")
+    except OsrmDirectionsError:
+        pass
+    http_client.close()
+
+
 def test_trip_service_uses_mapbox_when_token_is_set() -> None:
     directions = MagicMock()
     directions.has_token.return_value = True
@@ -197,15 +244,29 @@ def test_trip_service_uses_mapbox_when_token_is_set() -> None:
     directions.route.assert_called_once()
 
 
-def test_trip_service_falls_back_to_mock_when_mapbox_fails() -> None:
+def test_trip_service_falls_back_to_osrm_when_mapbox_fails() -> None:
     directions = MagicMock()
     directions.has_token.return_value = True
     directions.route.side_effect = MapboxDirectionsError("timeout")
-    service = TripService(directions_client=directions)
+    osrm = MagicMock()
+    osrm.route.return_value = Pathway(
+        coordinates=[
+            (18.4241, -33.9249),
+            (18.4300, -33.9255),
+            (18.4380, -33.9262),
+            (18.4470, -33.9270),
+        ],
+        distance_meters=2400,
+        duration_seconds=420,
+        provider="osrm",
+    )
+    service = TripService(directions_client=directions, osrm_client=osrm)
     result = service.plan(
         TripRequest(
             origin=TripPoint(latitude=-33.9249, longitude=18.4241),
             destination=TripPoint(latitude=-33.9270, longitude=18.4470),
         )
     )
-    assert result.pathway.provider == "mock"
+    assert result.pathway.provider == "osrm"
+    assert len(result.pathway.coordinates) >= 4
+    osrm.route.assert_called_once()

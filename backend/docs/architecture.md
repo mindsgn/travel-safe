@@ -7,14 +7,6 @@ public API consumed by the Travel Safe Expo client.
 
 | Endpoint | Method | Access | Response |
 |---|---|---|---|
-<<<<<<< HEAD
-| `/health` | GET | None | `{ "status": "ok" }` |
-| `/api/v1/sources` | GET | None | Source list with governance status, role and URL |
-| `/api/v1/stats` | GET | `area_code` | Precinct-level reported-crime statistics + caveats |
-| `/api/v1/heatmap` | GET | `bbox=west,south,east,north&zoom=5..18` | Aggregate map cells; never fabricated incident pins |
-| `/api/v1/areas/{area_code}/safety` | GET | Path area code | Confidence-aware signal; may return `insufficient_data` |
-| `/api/v1/trips` | POST | `{ origin, destination, profile? }` — each point is `{ latitude, longitude, label? }`; `profile` is `walking` (default) or `driving` | Pathway polyline (`coordinates` as `[lng, lat]`), plus a corridor heatmap of mock crime-intensity cells in a padded origin–destination bbox. `pathway.provider` is `mapbox` when `MAPBOX_ACCESS_TOKEN` succeeds, otherwise `mock`. `422` if coordinates are invalid or origin and destination are the same place. |
-=======
 | `/health` | GET | Public | `{"status":"ok"}` |
 | `/api/v1/sources` | GET | Public | Safety-source governance |
 | `/api/v1/dataset/status` | GET | Public | Active national safety-data mode |
@@ -34,26 +26,15 @@ public API consumed by the Travel Safe Expo client.
 | `/api/v1/halo/{halo_id}` | GET | Public | Halo detail + aggregates |
 | `/api/v1/halo/{halo_id}/rating` | PUT | `X-Client-ID` | Idempotent rating/like/visit signal |
 | `/api/v1/halo/{halo_id}/rating-settings` | PUT | Submitter `X-Client-ID` | Demo rating enable/disable |
->>>>>>> b3272070893ec1bebe2bc5d81b15e1b48c38551e
+| `/api/v1/trips` | POST | Public | Road-following pathway from Mapbox Directions (or OSRM streets) plus corridor heatmap |
 
 ## Access model
 
 The hackathon backend intentionally separates three access modes:
 
-<<<<<<< HEAD
-- Period: Apr 2025–Mar 2026.
-- Total reported crimes: 3,541.
-- Latest quarter Apr–Jun 2026: 910 vs 800 in Apr–Jun 2025.
-- Data resolution remains whole police precinct.
-- The fixture is not a live SafeSuburb feed and must not be represented as one.
-- Heat-map centroids are area context only, not crime-event coordinates.
-- `POST /api/v1/trips` adds a padded corridor heatmap of mock crime-intensity cells (plus the Woodstock fixture when it falls in the box). Those cells are not live incident pins.
-- The API intentionally withholds a safety score until peer calibration, denominator quality and model validation are agreed.
-=======
-1. **Public reads** for safety data, Halo discovery, and emergency numbers.
+1. **Public reads** for safety data, Halo discovery, emergency numbers, and trip routing.
 2. **Temporary client identity** via `X-Client-ID` for Halo community writes.
 3. **Secret-scoped group access** via `X-Group-Key` for trusted-location groups.
->>>>>>> b3272070893ec1bebe2bc5d81b15e1b48c38551e
 
 Neither temporary header is production authentication. Firebase/token
 verification remains deferred.

@@ -23,7 +23,7 @@ uvicorn src.main:app --reload
 
 The API is available at `http://127.0.0.1:8000`; check it at `GET /health`.
 
-Set `MAPBOX_ACCESS_TOKEN` in `code/.env` to use Mapbox Directions for `POST /api/v1/trips`. Without it, trips return a deterministic mock polyline plus mock crime heatmap cells.
+Set `MAPBOX_ACCESS_TOKEN` in `code/.env` to use Mapbox Directions for `POST /api/v1/trips`. Without it, trips snap to streets via OSRM (OpenStreetMap roads).
 
 ## Scripts
 
