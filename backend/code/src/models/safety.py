@@ -96,15 +96,10 @@ class SafetySignalResponse(BaseModel):
     period: str | None = None
     explanation: list[str]
     source_ids: list[str]
-    danger_score: float | None = Field(default=None, ge=0, le=100)
-    risk_band: RiskBand | None = None
-    color: str | None = None
-    top_crimes: list[MapCrimeStat] = Field(default_factory=list)
-    model_version: str | None = None
 
 
 TripProfile = Literal["walking", "driving"]
-PathwayProvider = Literal["mapbox", "osrm", "mock"]
+PathwayProvider = Literal["mapbox", "mock"]
 
 
 class TripPoint(BaseModel):
@@ -116,7 +111,7 @@ class TripPoint(BaseModel):
 class TripRequest(BaseModel):
     origin: TripPoint
     destination: TripPoint
-    profile: TripProfile = "driving"
+    profile: TripProfile = "walking"
 
 
 class Pathway(BaseModel):
@@ -131,6 +126,11 @@ class TripResponse(BaseModel):
     destination: TripPoint
     pathway: Pathway
     heatmap: HeatmapResponse
+    danger_score: float | None = Field(default=None, ge=0, le=100)
+    risk_band: RiskBand | None = None
+    color: str | None = None
+    top_crimes: list[MapCrimeStat] = Field(default_factory=list)
+    model_version: str | None = None
 
 
 class DatasetStatusResponse(BaseModel):
