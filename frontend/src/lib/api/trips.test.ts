@@ -75,7 +75,7 @@ describe('trips', () => {
       '/api/v1/trips',
       expect.objectContaining({
         method: 'POST',
-        body: expect.objectContaining({ profile: 'walking' }),
+        body: expect.objectContaining({ profile: 'driving' }),
       }),
     );
   });

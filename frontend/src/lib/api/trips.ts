@@ -3,7 +3,7 @@ import { isValidCoordinate } from '@/lib/map/coordinates';
 import type { MapCoordinate } from '@/lib/map/map.types';
 
 export type TripProfile = 'walking' | 'driving';
-export type PathwayProvider = 'mapbox' | 'mock';
+export type PathwayProvider = 'mapbox' | 'osrm' | 'mock';
 
 export type TripPoint = MapCoordinate & {
   label?: string;
@@ -127,7 +127,10 @@ export function parseTripResponse(value: unknown): TripPlan | null {
       ? [bboxRaw[0], bboxRaw[1], bboxRaw[2], bboxRaw[3]]
       : [0, 0, 0, 0];
 
-  const provider = candidate.pathway?.provider === 'mapbox' ? 'mapbox' : 'mock';
+  const provider =
+    candidate.pathway?.provider === 'mapbox' || candidate.pathway?.provider === 'osrm'
+      ? candidate.pathway.provider
+      : 'mock';
 
   return {
     origin,
@@ -162,7 +165,7 @@ export async function createTrip(
     body: {
       origin: input.origin,
       destination: input.destination,
-      profile: input.profile ?? 'walking',
+      profile: input.profile ?? 'driving',
     },
   });
   const parsed = parseTripResponse(payload);

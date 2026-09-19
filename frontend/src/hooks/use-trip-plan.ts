@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { createTrip, type TripPlan, type TripPoint } from '@/lib/api/trips';
 import { buildClientTripPlan } from '@/lib/api/trip-fallback';
+import { applyRoadPathway } from '@/lib/map/road-directions';
 import { strings } from '@/i18n/strings';
 import type { PlaceSuggestion } from '@/lib/map/geocoding';
 import type { MapCoordinate } from '@/lib/map/map.types';
@@ -33,11 +34,17 @@ export function tripStatusMessage(status: TripPlanStatus): string | null {
   return null;
 }
 
-export function useTripPlan(planTrip: typeof createTrip = createTrip) {
+export function useTripPlan(
+  planTrip: typeof createTrip = createTrip,
+  snapToRoads: typeof applyRoadPathway = applyRoadPathway,
+) {
   const [origin, setOrigin] = useState<TripPoint | null>(null);
   const [destination, setDestination] = useState<TripPoint | null>(null);
   const [plan, setPlan] = useState<TripPlan | null>(null);
   const [status, setStatus] = useState<TripPlanStatus>('idle');
+
+  const snapToRoadsRef = useRef(snapToRoads);
+  snapToRoadsRef.current = snapToRoads;
 
   const selectOrigin = useCallback((point: TripPoint) => {
     setOrigin(point);
@@ -56,15 +63,18 @@ export function useTripPlan(planTrip: typeof createTrip = createTrip) {
 
     let cancelled = false;
     setStatus('loading');
-    void planTrip({ origin, destination })
+    void planTrip({ origin, destination, profile: 'driving' })
+      .then((next) => snapToRoadsRef.current(next))
       .then((next) => {
         if (cancelled) return;
         setPlan(next);
         setStatus('ready');
       })
-      .catch(() => {
+      .catch(async () => {
         if (cancelled) return;
-        setPlan(buildClientTripPlan(origin, destination));
+        const fallback = await snapToRoadsRef.current(buildClientTripPlan(origin, destination));
+        if (cancelled) return;
+        setPlan(fallback);
         setStatus('error');
       });
 

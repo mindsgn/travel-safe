@@ -32,7 +32,7 @@ const PLAN: TripPlan = {
 };
 
 function Harness({ planTrip }: { planTrip: () => Promise<TripPlan> }) {
-  const trip = useTripPlan(planTrip);
+  const trip = useTripPlan(planTrip, async (plan) => plan);
   return (
     <>
       <Pressable testID="set-origin" onPress={() => trip.selectOrigin(PLAN.origin)} />
