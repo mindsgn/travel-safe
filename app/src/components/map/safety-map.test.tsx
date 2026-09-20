@@ -48,4 +48,16 @@ describe('SafetyMap', () => {
     expect(renderer.root.findByProps({ testID: 'map-zoom-in' })).toBeTruthy();
     Object.defineProperty(Platform, 'OS', { configurable: true, value: original });
   });
+
+  it('does not render a heatmap without cells', () => {
+    const original = Platform.OS;
+    Object.defineProperty(Platform, 'OS', { configurable: true, value: 'ios' });
+    let renderer: ReturnType<typeof create>;
+    act(() => {
+      renderer = create(<SafetyMap heatmapCells={[]} />);
+    });
+    expect(renderer.root.findByProps({ testID: 'map-view' })).toBeTruthy();
+    expect(renderer.root.findAllByProps({ testID: 'trip-heatmap' })).toHaveLength(0);
+    Object.defineProperty(Platform, 'OS', { configurable: true, value: original });
+  });
 });

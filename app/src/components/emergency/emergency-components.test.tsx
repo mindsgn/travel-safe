@@ -2,6 +2,7 @@ import { act, create } from 'react-test-renderer';
 
 import { CountdownCard } from '@/components/emergency/countdown-card';
 import { EmergencyEndedCard } from '@/components/emergency/emergency-ended-card';
+import { EmergencyServicesCard } from '@/components/emergency/emergency-services-card';
 import { EmergencyStatusCard } from '@/components/emergency/emergency-status-card';
 import { SosTriggerButton } from '@/components/emergency/sos-trigger-button';
 
@@ -111,6 +112,41 @@ describe('EmergencyStatusCard', () => {
 
     act(() => interactable(renderer.root, 'sos-end').props.onPress());
     expect(onEnd).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('EmergencyServicesCard', () => {
+  it('lists each service and hands the selection back on press', () => {
+    const onCall = jest.fn();
+    const services = [
+      { id: 'police', name: 'Police emergency', number: '10111', hint: '24-hour SAPS centre' },
+      { id: 'medical', name: 'Ambulance / medical', number: '10177', hint: 'Public ambulance' },
+    ] as const;
+    let renderer!: ReturnType<typeof create>;
+
+    act(() => {
+      renderer = create(
+        <EmergencyServicesCard
+          testID="emergency-services"
+          title="Direct lines"
+          subtitle="Not an SOS? Call a service."
+          services={services}
+          onCall={onCall}
+        />,
+      );
+    });
+
+    expect(renderer.root.findAllByProps({ testID: 'emergency-services' }).length).toBeGreaterThan(0);
+
+    const policeRow = interactable(renderer.root, 'emergency-service-police');
+    expect(policeRow.props.accessibilityRole).toBe('button');
+    act(() => policeRow.props.onPress());
+    expect(onCall).toHaveBeenCalledTimes(1);
+    expect(onCall.mock.calls[0][0]).toMatchObject({ id: 'police', number: '10111' });
+
+    act(() => interactable(renderer.root, 'emergency-service-medical').props.onPress());
+    expect(onCall).toHaveBeenCalledTimes(2);
+    expect(onCall.mock.calls[1][0]).toMatchObject({ id: 'medical', number: '10177' });
   });
 });
 

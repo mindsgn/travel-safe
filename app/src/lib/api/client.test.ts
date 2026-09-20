@@ -13,7 +13,8 @@ describe('api client', () => {
   it('posts JSON and parses the response', async () => {
     const fetchImpl = jest.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ ok: true }),
+      status: 200,
+      text: async () => JSON.stringify({ ok: true }),
     });
     const result = await apiRequest<{ ok: boolean }>('/api/v1/trips', {
       method: 'POST',
@@ -29,6 +30,21 @@ describe('api client', () => {
         body: JSON.stringify({ hello: 'world' }),
       }),
     );
+  });
+
+  it('returns nothing for 204 responses', async () => {
+    const fetchImpl = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 204,
+      text: async () => '',
+    });
+    const result = await apiRequest('/api/v1/devices/TS-ABC12345/location', {
+      method: 'POST',
+      body: { latitude: -33.9, longitude: 18.4 },
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      baseUrl: 'http://example.test',
+    });
+    expect(result).toBeUndefined();
   });
 
   it('throws ApiError on non-OK responses', async () => {

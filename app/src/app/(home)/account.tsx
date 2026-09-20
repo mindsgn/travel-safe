@@ -7,10 +7,12 @@ import { FeatureCard } from '@/components/feature-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { useDeviceCode } from '@/hooks/use-device-code';
 import { strings } from '@/i18n/strings';
 
 export default function AccountScreen() {
   const version = Constants.expoConfig?.version ?? '0.0.0';
+  const deviceCode = useDeviceCode();
 
   return (
     <ThemedView testID="account-screen" style={styles.root}>
@@ -29,6 +31,12 @@ export default function AccountScreen() {
           </View>
 
           <FeatureCard body={strings.account.intro.replace('{appName}', strings.appName)} />
+
+          <FeatureCard
+            testID="account-device-code"
+            title={strings.account.deviceCodeTitle}
+            body={`${strings.account.deviceCodeBody} ${deviceCode}`}
+          />
 
           <Pressable
             testID="account-trusted-contacts"

@@ -14,7 +14,7 @@ import {
   pathwayCoordinatesToMap,
   pathwayToLineGeoJSON,
 } from '@/lib/map/heatmap-geojson';
-import { createMapboxNativeHandle, createMapController, type MapboxCameraHandle } from '@/lib/map/map-service';
+import { createMapboxNativeHandle, createMapController, boundsFromCoordinates, expandBounds, type MapboxCameraHandle } from '@/lib/map/map-service';
 import type { MapMarker as MapMarkerModel, MapPolyline, MapRegion } from '@/lib/map/map.types';
 import { defaultRegionForCoordinate, regionForCamera } from '@/lib/map/regions';
 
@@ -57,7 +57,7 @@ const HEATMAP_STYLE = {
     1,
     'rgba(229,44,45,1)',
   ],
-  heatmapRadius: ['interpolate', ['linear'], ['zoom'], 8, 24, 12, 48, 15, 72],
+  heatmapRadius: ['interpolate', ['linear'], ['zoom'], 10, 8, 13, 14, 16, 20],
   heatmapOpacity: 0.9,
 };
 
@@ -73,7 +73,7 @@ const HEAT_CIRCLE_STYLE = {
     1,
     'rgba(229,44,45,0.6)',
   ],
-  circleRadius: ['interpolate', ['linear'], ['zoom'], 10, 18, 13, 36, 16, 56],
+  circleRadius: ['interpolate', ['linear'], ['zoom'], 12, 8, 14, 12, 16, 16],
   circleOpacity: 0.7,
   circleBlur: 0.6,
   circlePitchAlignment: 'map',
@@ -156,10 +156,14 @@ export function SafetyMap({
 
   useEffect(() => {
     if (!isMapReady || pathwayCoordinates.length < 2) return;
-    controllerRef.current.fitToCoordinates(pathwayCoordinatesToMap(pathwayCoordinates), {
-      edgePadding: { top: 120, right: 48, bottom: 220, left: 48 },
-    });
-  }, [isMapReady, pathwayCoordinates]);
+    const extras = markers.map((marker) => marker.coordinate);
+    controllerRef.current.fitToCoordinates(
+      [...pathwayCoordinatesToMap(pathwayCoordinates), ...extras],
+      {
+        edgePadding: { top: 180, right: 56, bottom: 260, left: 56 },
+      },
+    );
+  }, [isMapReady, markers, pathwayCoordinates]);
 
   const handleZoomBy = useCallback(
     (deltaZoom: number) => {
@@ -178,6 +182,12 @@ export function SafetyMap({
     () => (pathwayCoordinates.length >= 2 ? pathwayToLineGeoJSON({ coordinates: [...pathwayCoordinates] }) : null),
     [pathwayCoordinates],
   );
+  const cameraBounds = useMemo(() => {
+    if (pathwayCoordinates.length < 2) return null;
+    const extras = markers.map((marker) => marker.coordinate);
+    const bounds = boundsFromCoordinates([...pathwayCoordinatesToMap(pathwayCoordinates), ...extras]);
+    return bounds ? expandBounds(bounds) : null;
+  }, [markers, pathwayCoordinates]);
 
   if (Platform.OS === 'web') {
     return (
@@ -210,6 +220,20 @@ export function SafetyMap({
             centerCoordinate: [initialRegion.longitude, initialRegion.latitude],
             zoomLevel: 12,
           }}
+          bounds={
+            cameraBounds
+              ? {
+                  ne: cameraBounds.ne,
+                  sw: cameraBounds.sw,
+                  paddingTop: 180,
+                  paddingBottom: 260,
+                  paddingLeft: 56,
+                  paddingRight: 56,
+                }
+              : undefined
+          }
+          maxZoomLevel={cameraBounds ? 14 : undefined}
+          animationDuration={cameraBounds ? 800 : 0}
         />
 
         {heatmap.features.length > 0 ? (

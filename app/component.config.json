@@ -1,0 +1,6 @@
+{
+  "$schema": "https://reacticx.com/schema/component.config.json",
+  "outDir": "src/shared/components",
+  "packageManager": "yarn",
+  "installDependencies": "auto"
+}

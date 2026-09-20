@@ -28,6 +28,13 @@ export function currentLocationToTripPoint(
   };
 }
 
+export function tripPointLabel(point: TripPoint | null | undefined): string {
+  if (!point) return '';
+  const label = point.label?.trim();
+  if (label) return label;
+  return `${point.latitude.toFixed(5)}, ${point.longitude.toFixed(5)}`;
+}
+
 export function tripStatusMessage(status: TripPlanStatus): string | null {
   if (status === 'loading') return strings.trip.planning;
   if (status === 'error') return strings.trip.planFailed;
@@ -37,12 +44,12 @@ export function tripStatusMessage(status: TripPlanStatus): string | null {
 export function useTripPlan(
   planTrip: typeof createTrip = createTrip,
   snapToRoads: typeof applyRoadPathway = applyRoadPathway,
+  deviceCode?: string,
 ) {
   const [origin, setOrigin] = useState<TripPoint | null>(null);
   const [destination, setDestination] = useState<TripPoint | null>(null);
   const [plan, setPlan] = useState<TripPlan | null>(null);
   const [status, setStatus] = useState<TripPlanStatus>('idle');
-
   const snapToRoadsRef = useRef(snapToRoads);
   snapToRoadsRef.current = snapToRoads;
 
@@ -63,7 +70,7 @@ export function useTripPlan(
 
     let cancelled = false;
     setStatus('loading');
-    void planTrip({ origin, destination, profile: 'driving' })
+    void planTrip({ origin, destination, profile: 'driving', deviceCode })
       .then((next) => snapToRoadsRef.current(next))
       .then((next) => {
         if (cancelled) return;
@@ -81,7 +88,7 @@ export function useTripPlan(
     return () => {
       cancelled = true;
     };
-  }, [destination, origin, planTrip]);
+  }, [destination, deviceCode, origin, planTrip]);
 
   return {
     origin,

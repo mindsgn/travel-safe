@@ -4,42 +4,26 @@ import type { PlaceSuggestion } from '@/lib/map/geocoding';
 
 export type TripTarget = 'origin' | 'destination';
 
-export type PendingSelection = Partial<Record<TripTarget, PlaceSuggestion>>;
+export type TripPlaces = {
+  origin: PlaceSuggestion | null;
+  destination: PlaceSuggestion | null;
+};
 
-export type TripSelectionState = {
-  pending: PendingSelection;
-  setPending: (target: TripTarget, place: PlaceSuggestion) => void;
-  consume: (target: TripTarget) => PlaceSuggestion | null;
+export type TripSelectionState = TripPlaces & {
+  selectPlace: (target: TripTarget, place: PlaceSuggestion) => void;
   clear: () => void;
 };
 
-export function applyPendingSelection(
-  pending: PendingSelection,
-  target: TripTarget,
-  place: PlaceSuggestion,
-): PendingSelection {
-  return { ...pending, [target]: place };
+export function applySelectedPlace(selected: TripPlaces, target: TripTarget, place: PlaceSuggestion): TripPlaces {
+  if (target === 'origin') {
+    return { origin: place, destination: selected.destination };
+  }
+  return { origin: selected.origin, destination: place };
 }
 
-export function consumePendingSelection(
-  pending: PendingSelection,
-  target: TripTarget,
-): { place: PlaceSuggestion | null; next: PendingSelection } {
-  const place = pending[target] ?? null;
-  if (!place) return { place, next: pending };
-  const next = { ...pending };
-  delete next[target];
-  return { place, next };
-}
-
-export const useTripSelectionStore = create<TripSelectionState>((set, get) => ({
-  pending: {},
-  setPending: (target, place) => set((state) => ({ pending: applyPendingSelection(state.pending, target, place) })),
-  consume: (target) => {
-    const { place, next } = consumePendingSelection(get().pending, target);
-    if (!place) return null;
-    set({ pending: next });
-    return place;
-  },
-  clear: () => set({ pending: {} }),
+export const useTripSelectionStore = create<TripSelectionState>((set) => ({
+  origin: null,
+  destination: null,
+  selectPlace: (target, place) => set((state) => applySelectedPlace(state, target, place)),
+  clear: () => set({ origin: null, destination: null }),
 }));

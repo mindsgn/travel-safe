@@ -1,10 +1,6 @@
 import type { PlaceSuggestion } from '@/lib/map/geocoding';
 
-import {
-  applyPendingSelection,
-  consumePendingSelection,
-  useTripSelectionStore,
-} from './trip-selection-store';
+import { applySelectedPlace, useTripSelectionStore } from './trip-selection-store';
 
 const WOODSTOCK: PlaceSuggestion = {
   id: 'woodstock',
@@ -21,62 +17,41 @@ const CBD: PlaceSuggestion = {
 };
 
 describe('trip selection store helpers', () => {
-  it('stages a pending selection per target', () => {
-    const pending = applyPendingSelection({}, 'origin', WOODSTOCK);
-    expect(pending.origin).toEqual(WOODSTOCK);
-    const withDestination = applyPendingSelection(pending, 'destination', CBD);
-    expect(withDestination).toEqual({ origin: WOODSTOCK, destination: CBD });
+  it('commits a selected place per target', () => {
+    const next = applySelectedPlace({ origin: null, destination: null }, 'origin', WOODSTOCK);
+    expect(next.origin).toEqual(WOODSTOCK);
+    expect(applySelectedPlace(next, 'destination', CBD)).toEqual({ origin: WOODSTOCK, destination: CBD });
   });
 
   it('overwrites a previous selection for the same target', () => {
-    const pending = applyPendingSelection(
-      applyPendingSelection({}, 'origin', WOODSTOCK),
+    const next = applySelectedPlace(
+      applySelectedPlace({ origin: null, destination: null }, 'origin', WOODSTOCK),
       'origin',
       CBD,
     );
-    expect(pending.origin).toEqual(CBD);
-  });
-
-  it('consumes and removes a pending selection', () => {
-    const pending = applyPendingSelection({}, 'origin', WOODSTOCK);
-    const { place, next } = consumePendingSelection(pending, 'origin');
-    expect(place).toEqual(WOODSTOCK);
-    expect(next.origin).toBeUndefined();
-  });
-
-  it('consuming an empty target returns null without mutating', () => {
-    const pending = { destination: CBD };
-    const { place, next } = consumePendingSelection(pending, 'origin');
-    expect(place).toBeNull();
-    expect(next).toEqual(pending);
+    expect(next.origin).toEqual(CBD);
+    expect(next.destination).toBeNull();
   });
 });
 
 describe('useTripSelectionStore', () => {
   beforeEach(() => {
-    useTripSelectionStore.setState({ pending: {} });
+    useTripSelectionStore.setState({ origin: null, destination: null });
   });
 
-  it('setPending stages a selection for the origin', () => {
-    useTripSelectionStore.getState().setPending('origin', WOODSTOCK);
-    expect(useTripSelectionStore.getState().pending.origin).toEqual(WOODSTOCK);
+  it('selectPlace keeps origin and destination for the inputs', () => {
+    useTripSelectionStore.getState().selectPlace('origin', WOODSTOCK);
+    expect(useTripSelectionStore.getState().origin?.label).toBe('Woodstock, Cape Town');
+    useTripSelectionStore.getState().selectPlace('destination', CBD);
+    expect(useTripSelectionStore.getState().destination?.label).toBe('Cape Town CBD');
+    expect(useTripSelectionStore.getState().origin?.label).toBe('Woodstock, Cape Town');
   });
 
-  it('consume returns the staged selection and clears it', () => {
-    useTripSelectionStore.getState().setPending('origin', WOODSTOCK);
-    const place = useTripSelectionStore.getState().consume('origin');
-    expect(place).toEqual(WOODSTOCK);
-    expect(useTripSelectionStore.getState().pending.origin).toBeUndefined();
-  });
-
-  it('consume returns null when nothing is pending', () => {
-    expect(useTripSelectionStore.getState().consume('destination')).toBeNull();
-  });
-
-  it('clear discards all pending selections', () => {
-    useTripSelectionStore.getState().setPending('origin', WOODSTOCK);
-    useTripSelectionStore.getState().setPending('destination', CBD);
+  it('clear discards both selected places', () => {
+    useTripSelectionStore.getState().selectPlace('origin', WOODSTOCK);
+    useTripSelectionStore.getState().selectPlace('destination', CBD);
     useTripSelectionStore.getState().clear();
-    expect(useTripSelectionStore.getState().pending).toEqual({});
+    expect(useTripSelectionStore.getState().origin).toBeNull();
+    expect(useTripSelectionStore.getState().destination).toBeNull();
   });
 });

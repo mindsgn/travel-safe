@@ -31,6 +31,16 @@ appId: makers.travel.safe
 - assertVisible:
     id: "sos-trigger"
 
+# Direct lines let the user call the right service without an SOS alert.
+- assertVisible:
+    id: "emergency-services"
+- assertVisible:
+    id: "emergency-service-police"
+- assertVisible:
+    id: "emergency-service-medical"
+- assertVisible:
+    id: "emergency-service-fire"
+
 # Triggering starts the countdown.
 - tapOn:
     id: "sos-trigger"

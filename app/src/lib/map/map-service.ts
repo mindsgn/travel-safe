@@ -83,6 +83,20 @@ export function paddingFromEdge(
   return [edgePadding.top, edgePadding.right, edgePadding.bottom, edgePadding.left];
 }
 
+export function expandBounds(
+  bounds: { ne: [number, number]; sw: [number, number] },
+  fraction = 0.22,
+  minSpan = 0.012,
+): { ne: [number, number]; sw: [number, number] } {
+  const lngSpan = Math.max(minSpan, bounds.ne[0] - bounds.sw[0]);
+  const latSpan = Math.max(minSpan, bounds.ne[1] - bounds.sw[1]);
+  const padLng = lngSpan * fraction;
+  const padLat = latSpan * fraction;
+  return {
+    ne: [bounds.ne[0] + padLng, bounds.ne[1] + padLat],
+    sw: [bounds.sw[0] - padLng, bounds.sw[1] - padLat],
+  };
+}
 export function boundsFromCoordinates(coordinates: readonly MapCoordinate[]): {
   ne: [number, number];
   sw: [number, number];

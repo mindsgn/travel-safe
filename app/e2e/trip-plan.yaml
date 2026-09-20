@@ -1,9 +1,7 @@
 appId: makers.travel.safe
 ---
-# Plan a trip: tap the From field to open the full-screen search, pick an
-# origin, then pick a destination on the same search screen. The destination
-# field only appears once the origin is selected, and picking both points
-# gets a road pathway + heatmap back from the API.
+# Plan a trip: tap From then To. Heatmap cells come from the backend and
+# only appear around the returned roadway, never as a city-wide overlay.
 # Accepts the location permission prompt when it appears.
 
 - launchApp:
@@ -29,6 +27,10 @@ appId: makers.travel.safe
     id: "trip-plan-card"
 - assertVisible:
     id: "trip-origin-input"
+- assertNotVisible:
+    id: "trip-heatmap"
+- assertNotVisible:
+    id: "trip-pathway"
 # The destination is hidden until an origin has been chosen.
 - assertNotVisible:
     id: "trip-destination-input"

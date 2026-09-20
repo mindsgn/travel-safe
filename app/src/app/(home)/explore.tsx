@@ -4,16 +4,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MapStatusCard } from '@/components/map/map-status-card';
 import { SafetyMap } from '@/components/map/safety-map';
-import { SafetyLegend } from '@/components/safety-legend';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useMapLocation } from '@/hooks/use-map-location';
 import { strings } from '@/i18n/strings';
 import type { LivePosition } from '@/lib/location';
-import { safetyZonesToHeatmapCells } from '@/lib/map/heatmap-geojson';
-import { MOCK_SAFETY_ZONES } from '@/lib/safety-map';
-
-const heatmapCells = safetyZonesToHeatmapCells(MOCK_SAFETY_ZONES);
 
 export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
@@ -24,15 +19,9 @@ export default function ExploreScreen() {
     [position],
   );
 
-  const showLegend = status === 'ready' || status === 'inaccurate' || status === 'stale';
-
   return (
     <View testID="explore-screen" style={styles.container}>
-      <SafetyMap
-        liveLocation={liveLocation}
-        accuracyMeters={accuracyMeters}
-        heatmapCells={heatmapCells}
-      />
+      <SafetyMap liveLocation={liveLocation} accuracyMeters={accuracyMeters} heatmapCells={[]} />
 
       <View style={[styles.overlay, { top: insets.top + Spacing.two }]} pointerEvents="box-none">
         <View style={styles.headerCard}>
@@ -42,7 +31,6 @@ export default function ExploreScreen() {
           </ThemedText>
         </View>
         <MapStatusCard status={status} onRetry={retry} />
-        {showLegend ? <SafetyLegend /> : null}
       </View>
     </View>
   );

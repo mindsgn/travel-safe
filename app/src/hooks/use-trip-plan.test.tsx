@@ -6,6 +6,7 @@ import type { TripPlan } from '@/lib/api/trips';
 import {
   currentLocationToTripPoint,
   suggestionToTripPoint,
+  tripPointLabel,
   tripStatusMessage,
   useTripPlan,
 } from './use-trip-plan';
@@ -61,6 +62,8 @@ describe('useTripPlan helpers', () => {
       longitude: 18.4,
       label: 'Here',
     });
+    expect(tripPointLabel({ latitude: -33.9249, longitude: 18.4241, label: '  CBD  ' })).toBe('CBD');
+    expect(tripPointLabel({ latitude: -33.9249, longitude: 18.4241 })).toContain('-33.92490');
   });
 
   it('returns status copy for loading and error', () => {

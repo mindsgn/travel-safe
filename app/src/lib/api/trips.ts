@@ -46,6 +46,7 @@ export type CreateTripInput = {
   origin: TripPoint;
   destination: TripPoint;
   profile?: TripProfile;
+  deviceCode?: string;
 };
 
 function isLngLatPair(value: unknown): value is [number, number] {
@@ -68,6 +69,34 @@ export function parseTripPoint(value: unknown): TripPoint | null {
     point.label = candidate.label;
   }
   return point;
+}
+
+export function parseTripHeatmap(value: unknown): TripHeatmap | null {
+  if (value == null || typeof value !== 'object') return null;
+  const candidate = value as {
+    bbox?: unknown;
+    zoom?: unknown;
+    cells?: unknown;
+    normalization?: unknown;
+    caveats?: unknown;
+  };
+  const cells = Array.isArray(candidate.cells)
+    ? candidate.cells.map(parseHeatmapCell).filter((cell): cell is HeatmapCell => cell != null)
+    : [];
+  const bboxRaw = candidate.bbox;
+  const bbox: [number, number, number, number] =
+    Array.isArray(bboxRaw) && bboxRaw.length === 4 && bboxRaw.every((item) => typeof item === 'number')
+      ? [bboxRaw[0], bboxRaw[1], bboxRaw[2], bboxRaw[3]]
+      : [0, 0, 0, 0];
+  return {
+    bbox,
+    zoom: typeof candidate.zoom === 'number' ? candidate.zoom : 12,
+    cells,
+    normalization: typeof candidate.normalization === 'string' ? candidate.normalization : '',
+    caveats: Array.isArray(candidate.caveats)
+      ? candidate.caveats.filter((item): item is string => typeof item === 'string')
+      : [],
+  };
 }
 
 export function parseHeatmapCell(value: unknown): HeatmapCell | null {
@@ -101,13 +130,7 @@ export function parseTripResponse(value: unknown): TripPlan | null {
       duration_seconds?: unknown;
       provider?: unknown;
     };
-    heatmap?: {
-      bbox?: unknown;
-      zoom?: unknown;
-      cells?: unknown;
-      normalization?: unknown;
-      caveats?: unknown;
-    };
+    heatmap?: unknown;
   };
 
   const origin = parseTripPoint(candidate.origin);
@@ -117,15 +140,13 @@ export function parseTripResponse(value: unknown): TripPlan | null {
     : [];
   if (!origin || !destination || coordinates.length < 2) return null;
 
-  const cells = Array.isArray(candidate.heatmap?.cells)
-    ? candidate.heatmap.cells.map(parseHeatmapCell).filter((cell): cell is HeatmapCell => cell != null)
-    : [];
-
-  const bboxRaw = candidate.heatmap?.bbox;
-  const bbox: [number, number, number, number] =
-    Array.isArray(bboxRaw) && bboxRaw.length === 4 && bboxRaw.every((item) => typeof item === 'number')
-      ? [bboxRaw[0], bboxRaw[1], bboxRaw[2], bboxRaw[3]]
-      : [0, 0, 0, 0];
+  const heatmap = parseTripHeatmap(candidate.heatmap) ?? {
+    bbox: [0, 0, 0, 0],
+    zoom: 12,
+    cells: [],
+    normalization: '',
+    caveats: [],
+  };
 
   const provider =
     candidate.pathway?.provider === 'mapbox' || candidate.pathway?.provider === 'osrm'
@@ -143,16 +164,7 @@ export function parseTripResponse(value: unknown): TripPlan | null {
         typeof candidate.pathway?.duration_seconds === 'number' ? candidate.pathway.duration_seconds : 0,
       provider,
     },
-    heatmap: {
-      bbox,
-      zoom: typeof candidate.heatmap?.zoom === 'number' ? candidate.heatmap.zoom : 12,
-      cells,
-      normalization:
-        typeof candidate.heatmap?.normalization === 'string' ? candidate.heatmap.normalization : '',
-      caveats: Array.isArray(candidate.heatmap?.caveats)
-        ? candidate.heatmap.caveats.filter((item): item is string => typeof item === 'string')
-        : [],
-    },
+    heatmap,
   };
 }
 
@@ -166,6 +178,7 @@ export async function createTrip(
       origin: input.origin,
       destination: input.destination,
       profile: input.profile ?? 'driving',
+      device_code: input.deviceCode,
     },
   });
   const parsed = parseTripResponse(payload);

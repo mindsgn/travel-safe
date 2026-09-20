@@ -45,11 +45,11 @@ export function TripSearchField({
         onPress={onPress}
         style={({ pressed }) => [styles.field, pressed && styles.pressed]}>
         {value ? (
-          <ThemedText testID={`${testID}-value`} type="small" numberOfLines={1}>
+          <ThemedText testID={`${testID}-value`} type="small" numberOfLines={1} style={styles.value}>
             {value}
           </ThemedText>
         ) : (
-          <ThemedText type="small" themeColor="textSecondary">
+          <ThemedText type="small" style={styles.placeholder}>
             {placeholder}
           </ThemedText>
         )}
@@ -74,6 +74,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     minHeight: 48,
     justifyContent: 'center',
+  },
+  value: {
+    color: '#111827',
+  },
+  placeholder: {
+    color: '#6b7280',
   },
   pressed: {
     opacity: 0.7,

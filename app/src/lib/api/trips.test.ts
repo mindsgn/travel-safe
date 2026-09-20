@@ -1,4 +1,4 @@
-import { createTrip, parseHeatmapCell, parseTripPoint, parseTripResponse } from './trips';
+import { parseHeatmapCell, parseTripHeatmap, parseTripPoint, parseTripResponse, createTrip } from './trips';
 
 const SAMPLE = {
   origin: { latitude: -33.9249, longitude: 18.4241, label: 'CBD' },
@@ -49,6 +49,11 @@ describe('trips', () => {
     expect(parseHeatmapCell({ id: 'x' })).toBeNull();
   });
 
+  it('parses a standalone heatmap payload', () => {
+    expect(parseTripHeatmap(SAMPLE.heatmap)?.cells).toHaveLength(1);
+    expect(parseTripHeatmap(null)).toBeNull();
+  });
+
   it('parses a trip response', () => {
     const parsed = parseTripResponse(SAMPLE);
     expect(parsed?.pathway.coordinates).toHaveLength(2);
@@ -67,6 +72,7 @@ describe('trips', () => {
       {
         origin: SAMPLE.origin,
         destination: SAMPLE.destination,
+        deviceCode: 'TS-ABC12345',
       },
       request,
     );
@@ -75,7 +81,7 @@ describe('trips', () => {
       '/api/v1/trips',
       expect.objectContaining({
         method: 'POST',
-        body: expect.objectContaining({ profile: 'driving' }),
+        body: expect.objectContaining({ profile: 'driving', device_code: 'TS-ABC12345' }),
       }),
     );
   });

@@ -2,6 +2,7 @@ import {
   boundsFromCoordinates,
   createMapboxNativeHandle,
   createMapController,
+  expandBounds,
   paddingFromEdge,
   type NativeMapHandle,
 } from './map-service';
@@ -177,5 +178,10 @@ describe('createMapboxNativeHandle', () => {
       ne: [18.4, -33.9],
       sw: [18.4, -33.9],
     });
+    const expanded = expandBounds({ ne: [18.45, -33.9], sw: [18.4, -33.95] });
+    expect(expanded.ne[0]).toBeGreaterThan(18.45);
+    expect(expanded.sw[0]).toBeLessThan(18.4);
+    expect(expanded.ne[1]).toBeGreaterThan(-33.9);
+    expect(expanded.sw[1]).toBeLessThan(-33.95);
   });
 });

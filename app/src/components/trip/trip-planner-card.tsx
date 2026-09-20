@@ -6,6 +6,7 @@ import { TripSearchField } from '@/components/trip/trip-search-field';
 import { Spacing } from '@/constants/theme';
 import { strings } from '@/i18n/strings';
 import type { TripPoint } from '@/lib/api/trips';
+import { tripPointLabel } from '@/hooks/use-trip-plan';
 
 export type TripPlannerCardProps = {
   canUseCurrentLocation: boolean;
@@ -32,7 +33,7 @@ export function TripPlannerCard({
       <TripSearchField
         testID="trip-origin-input"
         label={strings.trip.originLabel}
-        value={origin?.label}
+        value={origin ? tripPointLabel(origin) : undefined}
         placeholder={strings.trip.originPlaceholder}
         actionLabel={origin || !canUseCurrentLocation ? undefined : strings.trip.useCurrentLocation}
         onAction={origin || !canUseCurrentLocation ? undefined : onUseCurrentLocation}
@@ -42,7 +43,7 @@ export function TripPlannerCard({
         <TripSearchField
           testID="trip-destination-input"
           label={strings.trip.destinationLabel}
-          value={destination?.label}
+          value={destination ? tripPointLabel(destination) : undefined}
           placeholder={strings.trip.destinationPlaceholder}
           onPress={onPressDestination}
         />

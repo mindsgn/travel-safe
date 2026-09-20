@@ -1,38 +1,29 @@
 appId: makers.travel.safe
 ---
-# Live location + safety heatmap smoke test.
-# Expects a debug build on a simulator/emulator with location permission
-# available so the system prompt can be accepted on first launch.
+# Live location map smoke test.
+# The heatmap is hidden at launch. It only appears after a GPS fix is sent
+# to the backend, or after a from/to trip query.
 
 - launchApp:
     clearState: true
 
-# First launch prompts for location permission; accept it.
 - runFlow:
     when:
       visible: "Allow While Using App"
     commands:
       - tapOn: "Allow While Using App"
 
-# Android wording for the same prompt.
 - runFlow:
     when:
       visible: "While using the app"
     commands:
       - tapOn: "While using the app"
 
-# Home screen renders the safety map with the legend overlaid.
 - assertVisible:
     id: "safety-map"
 - assertVisible:
     id: "map-view"
-- assertVisible:
-    id: "safety-legend"
-- assertVisible:
-    id: "safety-legend-gradient"
-
-# The legend explains the heatmap colours.
-- assertVisible:
-    text: "Safe"
-- assertVisible:
-    text: "Dangerous"
+- assertNotVisible:
+    id: "trip-heatmap"
+- assertNotVisible:
+    id: "trip-pathway"

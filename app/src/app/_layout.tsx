@@ -9,19 +9,22 @@ import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { migrate } from "drizzle-orm/expo-sqlite/migrator";
 import migrations from "@/drizzle/migrations";
 import { configureMapbox } from '@/lib/map/mapbox';
+import { GestureHandlerRootView } from "react-native-gesture-handler"
 
 SplashScreen.preventAutoHideAsync();
 configureMapbox(undefined, Mapbox as { setAccessToken: (token: string) => void });
 
 function RootNavigator() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(home)" />
-      <Stack.Screen name="place-search" />
-      <Stack.Screen name="trusted-contacts" />
-      <Stack.Screen name="trusted-contacts/onboarding" />
-      <Stack.Screen name="trusted-contacts/add" />
-    </Stack>
+    <GestureHandlerRootView>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(home)" />
+        <Stack.Screen name="place-search" />
+        <Stack.Screen name="trusted-contacts" />
+        <Stack.Screen name="trusted-contacts/onboarding" />
+        <Stack.Screen name="trusted-contacts/add" />
+      </Stack>
+    </GestureHandlerRootView>
   );
 }
 

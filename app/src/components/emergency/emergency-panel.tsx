@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CountdownCard } from '@/components/emergency/countdown-card';
 import { EmergencyEndedCard } from '@/components/emergency/emergency-ended-card';
+import { EmergencyServicesCard } from '@/components/emergency/emergency-services-card';
 import { EmergencyStatusCard } from '@/components/emergency/emergency-status-card';
 import { SosTriggerButton } from '@/components/emergency/sos-trigger-button';
 import { ThemedText } from '@/components/themed-text';
@@ -17,6 +18,7 @@ import {
   countdownRemainingMs,
   formatAccuracy,
 } from '@/lib/emergency';
+import { EMERGENCY_SERVICES, callEmergencyService } from '@/lib/emergency-services';
 import { useEmergencyStore } from '@/store/emergency-store';
 import { useTrustedContactsStore } from '@/store/trusted-contacts-store';
 
@@ -102,13 +104,16 @@ export function EmergencyPanel({ testID = 'emergency-screen', onDone }: Emergenc
           style={[styles.scroll, styles.content]}>
           {phase === 'idle' ? (
             <>
-              <View style={styles.triggerZone}>
-                <SosTriggerButton
-                  testID="sos-trigger"
-                  label={strings.emergency.trigger.label}
-                  onPress={handleTrigger}
-                />
-              </View>
+
+              <EmergencyServicesCard
+                testID="emergency-services"
+                title={strings.emergency.services.title}
+                subtitle={strings.emergency.services.subtitle}
+                services={EMERGENCY_SERVICES}
+                onCall={(service) => {
+                  void callEmergencyService(service.number);
+                }}
+              />
             </>
           ) : null}
 

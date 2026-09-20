@@ -8,7 +8,9 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
-
+.vscode/
+_vscode/
+_claude/
 # Native
 .kotlin/
 *.orig.*

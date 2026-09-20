@@ -31,12 +31,14 @@ appId: makers.travel.safe
 - assertVisible:
     id: "sos-trigger"
 
-# Explore tab shows the heatmap in browse mode.
+# Explore tab shows the map without a city-wide heatmap.
 - tapOn: "Explore"
 - assertVisible:
     id: "explore-screen"
+- assertNotVisible:
+    id: "trip-heatmap"
 
-# Account tab lists settings and safety links.
+# Account tab lists settings, the phone code, and safety links.
 - tapOn: "Account"
 - assertVisible:
     id: "account-screen"
@@ -44,6 +46,8 @@ appId: makers.travel.safe
     id: "account-title"
 - assertVisible:
     id: "account-version"
+- assertVisible:
+    id: "account-device-code"
 - assertVisible:
     id: "account-trusted-contacts"
 - assertVisible:

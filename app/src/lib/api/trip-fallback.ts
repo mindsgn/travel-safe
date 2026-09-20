@@ -1,6 +1,3 @@
-import { MOCK_SAFETY_ZONES } from '@/lib/safety-map';
-import { safetyZonesToHeatmapCells } from '@/lib/map/heatmap-geojson';
-
 import type { TripPlan, TripPoint } from './trips';
 
 export function buildClientTripPlan(origin: TripPoint, destination: TripPoint): TripPlan {
@@ -24,9 +21,9 @@ export function buildClientTripPlan(origin: TripPoint, destination: TripPoint): 
     heatmap: {
       bbox: [west, south, east, north],
       zoom: 12,
-      cells: safetyZonesToHeatmapCells(MOCK_SAFETY_ZONES),
-      normalization: 'client-fallback mock crime intensity',
-      caveats: ['Local mock pathway used because the trip API was unavailable.'],
+      cells: [],
+      normalization: '',
+      caveats: ['Trip pathway fallback has no heatmap; heatmap cells come from the backend only.'],
     },
   };
 }
