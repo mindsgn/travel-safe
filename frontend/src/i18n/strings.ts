@@ -1,5 +1,47 @@
 export const strings = {
   appName: 'Travel Safe',
+  tabs: {
+    home: 'Home',
+    emergency: 'Emergency',
+    explore: 'Explore',
+    account: 'Account',
+  },
+  explore: {
+    headerTitle: 'Explore',
+    headerSubtitle: 'Browse neighbourhood safety',
+  },
+  placeSearch: {
+    title: 'Search places',
+    subtitle: 'Pick a location for your trip',
+    placeholder: 'Search a place or street',
+    back: 'Back',
+    empty: 'Keep typing to see results',
+  },
+  account: {
+    headerTitle: 'Account',
+    headerSubtitle: 'Settings and safety preferences',
+    intro:
+      '{appName} keeps your journeys safer with live safety heatmaps, safe pathway planning and rapid emergency alerts.',
+    privacyTitle: 'Your data stays on-device',
+    privacyBody: 'Trusted contacts and your preferences are stored only on this device.',
+    privacyCta: 'Open trusted contacts',
+    emergencyTitle: 'Emergency SOS',
+    emergencyBody: 'Review how you alert and share your live location.',
+    emergencyCta: 'Open emergency',
+    version: 'Version {version}',
+  },
+  trip: {
+    title: 'Plan a trip',
+    originLabel: 'From',
+    originPlaceholder: 'Search a starting area',
+    destinationLabel: 'To',
+    destinationPlaceholder: 'Search a destination',
+    useCurrentLocation: 'Use current location',
+    currentLocationLabel: 'Current location',
+    planning: 'Building a safe pathway…',
+    planFailed: 'Could not plan this trip. Try another area.',
+    routeHint: 'Select a starting place to begin.',
+  },
   safetyMap: {
     headerTitle: 'Safety Map',
     headerSubtitle: 'Neighbourhood safety heatmap',
@@ -27,17 +69,6 @@ export const strings = {
   legend: {
     safe: 'Safe',
     dangerous: 'Dangerous',
-  },
-  trip: {
-    title: 'Plan a trip',
-    originLabel: 'From',
-    originPlaceholder: 'Search a starting area',
-    destinationLabel: 'To',
-    destinationPlaceholder: 'Search a destination',
-    useCurrentLocation: 'Use current location',
-    currentLocationLabel: 'Current location',
-    planning: 'Building a safe pathway…',
-    planFailed: 'Could not plan this trip. Try another area.',
   },
   fallback: {
     title: 'Interactive map unavailable',

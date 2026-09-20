@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useMemo } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -21,6 +21,7 @@ import type { LivePosition } from '@/lib/location';
 import { safetyZonesToHeatmapCells } from '@/lib/map/heatmap-geojson';
 import type { MapMarker } from '@/lib/map/map.types';
 import { MOCK_SAFETY_ZONES } from '@/lib/safety-map';
+import { useTripSelectionStore } from '@/store/trip-selection-store';
 
 const fallbackHeatmap = safetyZonesToHeatmapCells(MOCK_SAFETY_ZONES);
 
@@ -28,6 +29,24 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { position, accuracyMeters, status, retry } = useMapLocation();
   const trip = useTripPlan();
+  const { selectOrigin, selectDestination } = trip;
+  const pending = useTripSelectionStore((state) => state.pending);
+  const consume = useTripSelectionStore((state) => state.consume);
+
+  useFocusEffect(
+    useCallback(() => {
+      const originSuggestion = pending.origin;
+      const destinationSuggestion = pending.destination;
+      if (originSuggestion) {
+        selectOrigin(suggestionToTripPoint(originSuggestion));
+        consume('origin');
+      }
+      if (destinationSuggestion) {
+        selectDestination(suggestionToTripPoint(destinationSuggestion));
+        consume('destination');
+      }
+    }, [consume, pending.destination, pending.origin, selectDestination, selectOrigin]),
+  );
 
   const liveLocation = useMemo<LivePosition | null>(
     () => (position ? { latitude: position.latitude, longitude: position.longitude } : null),
@@ -74,60 +93,18 @@ export default function HomeScreen() {
 
       <View style={[styles.overlay, { top: insets.top + Spacing.two }]} pointerEvents="box-none">
         <TripPlannerCard
-          proximity={liveLocation}
           canUseCurrentLocation={Boolean(liveLocation)}
           statusMessage={trip.statusMessage}
-          onSelectOrigin={(place) => trip.selectOrigin(suggestionToTripPoint(place))}
-          onSelectDestination={(place) => trip.selectDestination(suggestionToTripPoint(place))}
+          origin={trip.origin}
+          destination={trip.destination}
+          onPressOrigin={() => router.push('/place-search?target=origin')}
+          onPressDestination={() => router.push('/place-search?target=destination')}
           onUseCurrentLocation={() => {
             if (liveLocation) trip.selectOrigin(currentLocationToTripPoint(liveLocation));
           }}
         />
         <MapStatusCard status={status} onRetry={retry} />
         {showLegend ? <SafetyLegend /> : null}
-      </View>
-
-      <View style={styles.entries}>
-        <Pressable
-          testID="home-sos-entry"
-          accessibilityRole="button"
-          onPress={() => router.push('/emergency')}
-          style={styles.entryHitbox}>
-          {({ pressed }) => (
-            <ThemedView
-              type="backgroundSelected"
-              style={[styles.entry, pressed && styles.entryPressed]}>
-              <ThemedText type="smallBold" themeColor="brandText">
-                {strings.emergency.homeEntry.title}
-              </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {strings.emergency.homeEntry.body}
-              </ThemedText>
-              <ThemedText type="smallBold" themeColor="brandText" style={styles.cta}>
-                {strings.emergency.homeEntry.cta}
-              </ThemedText>
-            </ThemedView>
-          )}
-        </Pressable>
-        <Pressable
-          testID="home-trusted-contacts-entry"
-          accessibilityRole="button"
-          onPress={() => router.push('/trusted-contacts')}
-          style={styles.entryHitbox}>
-          {({ pressed }) => (
-            <ThemedView
-              type="backgroundSelected"
-              style={[styles.entry, pressed && styles.entryPressed]}>
-              <ThemedText type="smallBold">{strings.trustedContacts.homeEntry.title}</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {strings.trustedContacts.homeEntry.body}
-              </ThemedText>
-              <ThemedText type="smallBold" themeColor="brandText" style={styles.cta}>
-                {strings.trustedContacts.homeEntry.cta}
-              </ThemedText>
-            </ThemedView>
-          )}
-        </Pressable>
       </View>
     </View>
   );

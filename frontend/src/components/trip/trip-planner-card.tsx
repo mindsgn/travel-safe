@@ -1,49 +1,59 @@
 import { StyleSheet, View } from 'react-native';
 
-import { PlaceSearchField } from '@/components/trip/place-search-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { TripSearchField } from '@/components/trip/trip-search-field';
 import { Spacing } from '@/constants/theme';
 import { strings } from '@/i18n/strings';
-import type { PlaceSuggestion } from '@/lib/map/geocoding';
-import type { MapCoordinate } from '@/lib/map/map.types';
+import type { TripPoint } from '@/lib/api/trips';
 
 export type TripPlannerCardProps = {
-  proximity?: MapCoordinate | null;
   canUseCurrentLocation: boolean;
   statusMessage?: string | null;
-  onSelectOrigin: (place: PlaceSuggestion) => void;
-  onSelectDestination: (place: PlaceSuggestion) => void;
+  origin: TripPoint | null;
+  destination: TripPoint | null;
+  onPressOrigin: () => void;
+  onPressDestination: () => void;
   onUseCurrentLocation: () => void;
 };
 
 export function TripPlannerCard({
-  proximity,
   canUseCurrentLocation,
   statusMessage,
-  onSelectOrigin,
-  onSelectDestination,
+  origin,
+  destination,
+  onPressOrigin,
+  onPressDestination,
   onUseCurrentLocation,
 }: TripPlannerCardProps) {
   return (
     <ThemedView type="backgroundSelected" style={styles.card} testID="trip-plan-card">
       <ThemedText type="smallBold">{strings.trip.title}</ThemedText>
-      <PlaceSearchField
+      <TripSearchField
         testID="trip-origin-input"
         label={strings.trip.originLabel}
+        value={origin?.label}
         placeholder={strings.trip.originPlaceholder}
-        proximity={proximity}
-        actionLabel={canUseCurrentLocation ? strings.trip.useCurrentLocation : undefined}
-        onAction={canUseCurrentLocation ? onUseCurrentLocation : undefined}
-        onSelect={onSelectOrigin}
+        actionLabel={origin || !canUseCurrentLocation ? undefined : strings.trip.useCurrentLocation}
+        onAction={origin || !canUseCurrentLocation ? undefined : onUseCurrentLocation}
+        onPress={onPressOrigin}
       />
-      <PlaceSearchField
-        testID="trip-destination-input"
-        label={strings.trip.destinationLabel}
-        placeholder={strings.trip.destinationPlaceholder}
-        proximity={proximity}
-        onSelect={onSelectDestination}
-      />
+      {origin ? (
+        <TripSearchField
+          testID="trip-destination-input"
+          label={strings.trip.destinationLabel}
+          value={destination?.label}
+          placeholder={strings.trip.destinationPlaceholder}
+          onPress={onPressDestination}
+        />
+      ) : null}
+      {!origin ? (
+        <View testID="trip-route-hint">
+          <ThemedText type="small" themeColor="textSecondary">
+            {strings.trip.routeHint}
+          </ThemedText>
+        </View>
+      ) : null}
       {statusMessage ? (
         <View testID="trip-plan-status">
           <ThemedText type="small" themeColor="textSecondary">

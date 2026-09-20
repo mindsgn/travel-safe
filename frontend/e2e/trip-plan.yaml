@@ -1,6 +1,9 @@
 appId: makers.travel.safe
 ---
-# Plan a trip from the home map using place search dropdowns.
+# Plan a trip: tap the From field to open the full-screen search, pick an
+# origin, then pick a destination on the same search screen. The destination
+# field only appears once the origin is selected, and picking both points
+# gets a road pathway + heatmap back from the API.
 # Accepts the location permission prompt when it appears.
 
 - launchApp:
@@ -26,28 +29,48 @@ appId: makers.travel.safe
     id: "trip-plan-card"
 - assertVisible:
     id: "trip-origin-input"
-- assertVisible:
+# The destination is hidden until an origin has been chosen.
+- assertNotVisible:
     id: "trip-destination-input"
-- assertVisible:
-    id: "trip-heatmap"
 
+# Tapping the From field opens the full-screen place search.
 - tapOn:
     id: "trip-origin-input"
-- inputText: "Cape"
-
 - assertVisible:
-    id: "trip-origin-suggestion-0"
+    id: "place-search-screen"
+- assertVisible:
+    id: "place-search-input"
+- inputText: "Cape"
+- assertVisible:
+    id: "place-search-suggestion-0"
 - tapOn:
-    id: "trip-origin-suggestion-0"
+    id: "place-search-suggestion-0"
 
+# Back on the map the origin shows and the destination field appears.
+- assertNotVisible:
+    id: "place-search-screen"
+- assertVisible:
+    id: "trip-origin-input-value"
+- assertVisible:
+    id: "trip-destination-input"
+
+# Tapping the To field opens the same full-screen search.
 - tapOn:
     id: "trip-destination-input"
+- assertVisible:
+    id: "place-search-screen"
 - inputText: "Wood"
-
 - assertVisible:
-    id: "trip-destination-suggestion-0"
+    id: "place-search-suggestion-0"
 - tapOn:
-    id: "trip-destination-suggestion-0"
+    id: "place-search-suggestion-0"
 
+# Both points are chosen: the API returns a pathway and heatmap cells.
 - assertVisible:
-    id: "trip-pathway"
+    id: "trip-destination-input-value"
+- extendedWaitUntil:
+    visible:
+      id: "trip-pathway"
+    timeout: 15000
+- assertVisible:
+    id: "trip-heatmap"
