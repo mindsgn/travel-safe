@@ -1,9 +1,0 @@
-# Raw/downloaded source data stays local.
-*.csv
-*.zip
-*.dta
-*.sav
-*.por
-
-# Keep the validated derived national demo snapshot.
-!safety-map-2025-2026.danger-v1.1.json.gz

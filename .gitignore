@@ -3,6 +3,8 @@
 Thumbs.db
 Desktop.ini
 _frontend
+_backend
+_prompts
 # Editors
 .vscode/*
 !.vscode/extensions.json
