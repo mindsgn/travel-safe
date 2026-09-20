@@ -1,0 +1,37 @@
+appId: makers.travel.safe
+---
+# Safety map loads and exposes its controls + legend.
+# Accepts the location permission so the map can render the user's position.
+
+- launchApp:
+    clearState: true
+
+- runFlow:
+    when:
+      visible: "Allow While Using App"
+    commands:
+      - tapOn: "Allow While Using App"
+
+- runFlow:
+    when:
+      visible: "While using the app"
+    commands:
+      - tapOn: "While using the app"
+
+# The map surface and its recenter/zoom controls are present.
+- assertVisible:
+    id: "safety-map"
+- assertVisible:
+    id: "map-view"
+- assertVisible:
+    id: "map-recenter"
+- assertVisible:
+    id: "map-zoom-in"
+- assertVisible:
+    id: "map-zoom-out"
+
+# The heatmap legend renders once a position is available.
+- assertVisible:
+    id: "safety-legend"
+- assertVisible:
+    id: "safety-legend-gradient"

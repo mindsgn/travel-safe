@@ -1,0 +1,43 @@
+appId: makers.travel.safe
+---
+# Camera controls: zoom in, zoom out, and recenter keep the map usable.
+
+- launchApp:
+    clearState: true
+
+- runFlow:
+    when:
+      visible: "Allow While Using App"
+    commands:
+      - tapOn: "Allow While Using App"
+
+- runFlow:
+    when:
+      visible: "While using the app"
+    commands:
+      - tapOn: "While using the app"
+
+- assertVisible:
+    id: "map-view"
+
+# Zooming does not dismiss the map or its controls.
+- tapOn:
+    id: "map-zoom-in"
+- assertVisible:
+    id: "map-view"
+- tapOn:
+    id: "map-zoom-in"
+- assertVisible:
+    id: "map-view"
+- tapOn:
+    id: "map-zoom-out"
+- assertVisible:
+    id: "map-view"
+
+# Recentering returns the camera to the user's position.
+- tapOn:
+    id: "map-recenter"
+- assertVisible:
+    id: "map-view"
+- assertVisible:
+    id: "map-recenter"
