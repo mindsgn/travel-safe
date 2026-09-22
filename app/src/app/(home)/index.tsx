@@ -94,6 +94,9 @@ export default function HomeScreen() {
         markers={tripMarkers}
         followUser={pathwayCoordinates.length < 2}
       />
+
+      {
+        /*
         <View style={[styles.overlay, { top: insets.top + Spacing.two }]} pointerEvents="box-none">
           <TripPlannerCard
             canUseCurrentLocation={Boolean(liveLocation)}
@@ -114,6 +117,9 @@ export default function HomeScreen() {
             }}
           />
         </View>
+        */
+      }
+
     </View>
   );
 }

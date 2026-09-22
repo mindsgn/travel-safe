@@ -60,6 +60,7 @@ export function TripSearchField({
 const styles = StyleSheet.create({
   wrap: {
     gap: Spacing.one,
+    width: "80%",
   },
   headerRow: {
     flexDirection: 'row',

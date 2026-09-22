@@ -8,7 +8,7 @@ export const Colors = {
   light: {
     text: '#000000',
     background: '#ffffff',
-    backgroundElement: '#F0F0F3',
+    backgroundElement: '#FFFFFF',
     backgroundSelected: '#FFFFFF',
     textSecondary: '#60646C',
     brand: '#4cf56b',
@@ -19,8 +19,8 @@ export const Colors = {
   dark: {
     text: '#ffffff',
     background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
+    backgroundElement: '#FFFFFF',
+    backgroundSelected: '#FFFFFF',
     textSecondary: '#B0B4BA',
     brand: '#4cf56b',
     brandText: '#0a2010',

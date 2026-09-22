@@ -94,17 +94,10 @@ export function EmergencyPanel({ testID = 'emergency-screen', onDone }: Emergenc
   return (
     <ThemedView testID={testID} style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-        <View style={styles.header}>
-          <ThemedText type="smallBold">{strings.emergency.screen.title}</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
-            {strings.emergency.screen.subtitle}
-          </ThemedText>
-        </View>
         <View
           style={[styles.scroll, styles.content]}>
           {phase === 'idle' ? (
             <>
-
               <EmergencyServicesCard
                 testID="emergency-services"
                 title={strings.emergency.services.title}

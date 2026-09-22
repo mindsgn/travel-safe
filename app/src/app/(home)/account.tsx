@@ -2,6 +2,7 @@ import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { QRCode } from '@/shared/components/base/qr-code';
 
 import { FeatureCard } from '@/components/feature-card';
 import { ThemedText } from '@/components/themed-text';
@@ -17,55 +18,26 @@ export default function AccountScreen() {
   return (
     <ThemedView testID="account-screen" style={styles.root}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}>
-          <View style={styles.header}>
-            <ThemedText testID="account-title" type="smallBold">
-              {strings.account.headerTitle}
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              {strings.account.headerSubtitle}
-            </ThemedText>
+        <View
+          style={styles.scroll}>
+          <View style={{flex:1}}>
+            <QRCode
+              style={{alignSelf: "center"}}>
+              <QRCode.Label>Show QR Code</QRCode.Label>
+              <QRCode.Value value={deviceCode} />
+                <QRCode.Actions>
+                  <QRCode.CloseButton />
+                </QRCode.Actions>
+            </QRCode>
           </View>
 
-          <FeatureCard body={strings.account.intro.replace('{appName}', strings.appName)} />
-
-          <FeatureCard
-            testID="account-device-code"
-            title={strings.account.deviceCodeTitle}
-            body={`${strings.account.deviceCodeBody} ${deviceCode}`}
-          />
-
-          <Pressable
-            testID="account-trusted-contacts"
-            accessibilityRole="button"
-            onPress={() => router.push('/trusted-contacts')}
-            style={({ pressed }) => pressed && styles.pressed}>
-            <FeatureCard
-              title={strings.account.privacyTitle}
-              body={`${strings.account.privacyBody} ${strings.account.privacyCta}`}
-            />
-          </Pressable>
-
-          <Pressable
-            testID="account-emergency"
-            accessibilityRole="button"
-            onPress={() => router.navigate('/emergency')}
-            style={({ pressed }) => pressed && styles.pressed}>
-            <FeatureCard
-              title={strings.account.emergencyTitle}
-              body={strings.account.emergencyBody}
-            />
-          </Pressable>
 
           <View testID="account-version" style={styles.version}>
             <ThemedText type="small" themeColor="textSecondary">
               {strings.account.version.replace('{version}', version)}
             </ThemedText>
           </View>
-        </ScrollView>
+        </View>
       </SafeAreaView>
     </ThemedView>
   );
@@ -74,6 +46,7 @@ export default function AccountScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    paddingBottom: 100
   },
   safeArea: {
     flex: 1,

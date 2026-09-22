@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { ScrollView } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -25,10 +26,6 @@ export function EmergencyServicesCard({
 
   return (
     <ThemedView testID={testID} type="backgroundElement" style={styles.container}>
-      <ThemedText type="smallBold">{title}</ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        {subtitle}
-      </ThemedText>
       <View style={styles.list}>
         {services.map((service) => (
           <Pressable
@@ -58,7 +55,6 @@ export function EmergencyServicesCard({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: Spacing.three,
     padding: Spacing.four,
     gap: Spacing.three,
   },
