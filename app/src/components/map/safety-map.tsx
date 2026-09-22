@@ -207,10 +207,10 @@ export function SafetyMap({
       <Mapbox.MapView
         style={styles.map}
         styleURL={Mapbox.StyleURL?.Street ?? STREET_STYLE_URL}
-        compassEnabled
-        scaleBarEnabled
+        compassEnabled={false}
+        scaleBarEnabled={false}
         logoEnabled={false}
-        attributionEnabled
+        attributionEnabled={false}
         onDidFinishLoadingMap={handleMapReady}
         accessibilityLabel={strings.safetyMap.headerTitle}
         testID="map-view">
@@ -292,32 +292,6 @@ export function SafetyMap({
           />
         ) : null}
       </Mapbox.MapView>
-
-      {controls ? (
-        <View style={styles.controls} pointerEvents="box-none">
-          <View style={styles.controlCluster}>
-            <MapControlButton
-              testID="map-zoom-in"
-              label={strings.safetyMap.zoomIn}
-              symbol="+"
-              onPress={handleZoomIn}
-            />
-            <MapControlButton
-              testID="map-zoom-out"
-              label={strings.safetyMap.zoomOut}
-              symbol="−"
-              onPress={handleZoomOut}
-            />
-          </View>
-          <MapControlButton
-            testID="map-recenter"
-            label={strings.safetyMap.recenter}
-            symbol="◎"
-            onPress={recenterToUser}
-            primary
-          />
-        </View>
-      ) : null}
     </View>
   );
 }

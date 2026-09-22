@@ -3,6 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
+    "@expo/material-symbols": "^0.1.1",
     "@expo/ui": "~57.0.19",
     "@expo/vector-icons": "^15.0.2",
     "@rnmapbox/maps": "^10.3.5",

@@ -25,7 +25,6 @@ export function TripSearchField({
   return (
     <View style={styles.wrap}>
       <View style={styles.headerRow}>
-        <ThemedText type="smallBold">{label}</ThemedText>
         {actionLabel && onAction ? (
           <Pressable
             testID={`${testID}-action`}

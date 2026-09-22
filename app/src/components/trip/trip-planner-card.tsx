@@ -29,7 +29,6 @@ export function TripPlannerCard({
 }: TripPlannerCardProps) {
   return (
     <ThemedView type="backgroundSelected" style={styles.card} testID="trip-plan-card">
-      <ThemedText type="smallBold">{strings.trip.title}</ThemedText>
       <TripSearchField
         testID="trip-origin-input"
         label={strings.trip.originLabel}
@@ -47,20 +46,6 @@ export function TripPlannerCard({
           placeholder={strings.trip.destinationPlaceholder}
           onPress={onPressDestination}
         />
-      ) : null}
-      {!origin ? (
-        <View testID="trip-route-hint">
-          <ThemedText type="small" themeColor="textSecondary">
-            {strings.trip.routeHint}
-          </ThemedText>
-        </View>
-      ) : null}
-      {statusMessage ? (
-        <View testID="trip-plan-status">
-          <ThemedText type="small" themeColor="textSecondary">
-            {statusMessage}
-          </ThemedText>
-        </View>
       ) : null}
     </ThemedView>
   );

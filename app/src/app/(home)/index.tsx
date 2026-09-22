@@ -94,28 +94,26 @@ export default function HomeScreen() {
         markers={tripMarkers}
         followUser={pathwayCoordinates.length < 2}
       />
-
-      <View style={[styles.overlay, { top: insets.top + Spacing.two }]} pointerEvents="box-none">
-        <TripPlannerCard
-          canUseCurrentLocation={Boolean(liveLocation)}
-          statusMessage={trip.statusMessage}
-          origin={origin}
-          destination={destination}
-          onPressOrigin={() => router.push('/place-search?target=origin')}
-          onPressDestination={() => router.push('/place-search?target=destination')}
-          onUseCurrentLocation={() => {
-            if (!liveLocation) return;
-            const point = currentLocationToTripPoint(liveLocation);
-            selectPlace('origin', {
-              id: 'current-location',
-              label: point.label ?? strings.trip.currentLocationLabel,
-              latitude: point.latitude,
-              longitude: point.longitude,
-            });
-          }}
-        />
-        <MapStatusCard status={status} onRetry={retry} />
-      </View>
+        <View style={[styles.overlay, { top: insets.top + Spacing.two }]} pointerEvents="box-none">
+          <TripPlannerCard
+            canUseCurrentLocation={Boolean(liveLocation)}
+            statusMessage={trip.statusMessage}
+            origin={origin}
+            destination={destination}
+            onPressOrigin={() => router.push('/place-search?target=origin')}
+            onPressDestination={() => router.push('/place-search?target=destination')}
+            onUseCurrentLocation={() => {
+              if (!liveLocation) return;
+              const point = currentLocationToTripPoint(liveLocation);
+              selectPlace('origin', {
+                id: 'current-location',
+                label: point.label ?? strings.trip.currentLocationLabel,
+                latitude: point.latitude,
+                longitude: point.longitude,
+              });
+            }}
+          />
+        </View>
     </View>
   );
 }
