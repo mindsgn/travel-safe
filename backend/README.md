@@ -1,7 +1,7 @@
-# Deadman Switch API
+# Travel Safe API
 
 Python (FastAPI) service with SQLite storage. It is the authoritative source for whether a
-user's Deadman Switch has triggered: the app records check-ins, and a separate worker process
+user's Travel Safe has triggered: the app records check-ins, and a separate worker process
 detects missed deadlines and notifies emergency contacts.
 
 ## Run

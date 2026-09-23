@@ -15,7 +15,7 @@ def create_app(settings: Settings | None = None, clock: Clock = utc_now) -> Fast
     settings = settings or Settings.from_env()
     connect(settings.db_path).close()  # apply migrations once at startup
 
-    app = FastAPI(title="Deadman Switch API", version="1.0.0")
+    app = FastAPI(title="Travel Safe API", version="1.0.0")
     app.state.settings = settings
     app.state.clock = clock
     if settings.cors_origins:

@@ -25,7 +25,7 @@ def test_resend_sends_expected_request():
         captured["request"] = request
         return httpx.Response(200, json={"id": "re_123"})
 
-    provider = ResendEmailProvider("re_key", "Deadman Switch <alerts@example.com>", client=_client(handler))
+    provider = ResendEmailProvider("re_key", "Travel Safe <alerts@example.com>", client=_client(handler))
     result = provider.send_email(to="a@example.com", subject="S", text="T", html="<p>H</p>", idempotency_key="n1-1")
     assert result.ok and result.provider_message_id == "re_123"
     request = captured["request"]

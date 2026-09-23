@@ -177,7 +177,7 @@ def last_location(db: Db, user_id: UserId) -> dict:
     return {"last_known": locations.get_last_known(db, user_id)}
 
 
-# --- Deadman switch -----------------------------------------------------------------
+# --- Travel Safe -----------------------------------------------------------------
 
 
 @router.get("/switch/status")

@@ -1,7 +1,7 @@
-# Deadman Switch · Store submission notes
+# Travel Safe · Store submission notes
 
 Everything needed to prepare the App Store and Google Play submissions. The wording here is
-deliberately careful. Deadman Switch notifies people; it does not contact emergency services
+deliberately careful. Travel Safe notifies people; it does not contact emergency services
 and cannot guarantee anyone's safety.
 
 ---
@@ -13,10 +13,10 @@ and cannot guarantee anyone's safety.
 | Permission | Info.plist key | When it's asked | Usage string |
 |---|---|---|---|
 | Notifications | (runtime prompt) | Onboarding, Permissions step, after an explanation | n/a |
-| Location (When In Use) | `NSLocationWhenInUseUsageDescription` | Onboarding, Permissions step | "Deadman Switch saves your location when you check in, so your emergency contacts know where to start looking if you miss a check-in." |
-| Location (Always) | `NSLocationAlwaysAndWhenInUseUsageDescription` | Only when the user turns on Journey sharing | "With Journey sharing on, Deadman Switch keeps your last known location current between check-ins. You can turn this off at any time." |
-| Face ID | `NSFaceIDUsageDescription` | The first time a protected setting is opened | "Deadman Switch uses Face ID to stop anyone else from changing your emergency contacts or settings." |
-| Contacts | `NSContactsUsageDescription` | Normally never: the system contact picker needs no permission | "Deadman Switch lets you pick an emergency contact from your address book. Only the person you choose is shared with the app." |
+| Location (When In Use) | `NSLocationWhenInUseUsageDescription` | Onboarding, Permissions step | "Travel Safe saves your location when you check in, so your emergency contacts know where to start looking if you miss a check-in." |
+| Location (Always) | `NSLocationAlwaysAndWhenInUseUsageDescription` | Only when the user turns on Journey sharing | "With Journey sharing on, Travel Safe keeps your last known location current between check-ins. You can turn this off at any time." |
+| Face ID | `NSFaceIDUsageDescription` | The first time a protected setting is opened | "Travel Safe uses Face ID to stop anyone else from changing your emergency contacts or settings." |
+| Contacts | `NSContactsUsageDescription` | Normally never: the system contact picker needs no permission | "Travel Safe lets you pick an emergency contact from your address book. Only the person you choose is shared with the app." |
 
 SMS invites use the system Messages composer, and the user must press Send. Battery level and SIM
 country need no permission.
@@ -146,7 +146,7 @@ country need no permission.
 
 ## Store listing
 
-**App name:** Deadman Switch
+**App name:** Travel Safe
 
 **Subtitle (iOS, 30 characters):** Check in. Stay connected.
 
@@ -155,7 +155,7 @@ country need no permission.
 
 **Full description:**
 
-> Deadman Switch is a simple safety check-in for people who travel alone, live alone, hike, or
+> Travel Safe is a simple safety check-in for people who travel alone, live alone, hike, or
 > work in remote places.
 >
 > **How it works**
@@ -177,7 +177,7 @@ country need no permission.
 > • Emergency links are private and expire.
 > • Delete your account at any time.
 >
-> **Important:** Deadman Switch notifies the people you choose. It does not contact emergency
+> **Important:** Travel Safe notifies the people you choose. It does not contact emergency
 > services, and it can't guarantee your safety or that messages will be delivered or read. In
 > an emergency, contact your local emergency number.
 

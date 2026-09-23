@@ -1,6 +1,6 @@
-# Deadman Switch
+# Travel Safe
 
-Deadman Switch is a personal safety check-in app built by The Makers. You check in with one tap
+Travel Safe is a personal safety check-in app built by The Makers. You check in with one tap
 on a schedule you choose. If you miss a check-in, the people you've chosen are notified with your
 last known location. It is a safety net, not an emergency service.
 

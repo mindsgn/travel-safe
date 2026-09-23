@@ -42,7 +42,7 @@ def email_text(message: EmergencyMessage) -> str:
         [
             f"Hi {message.contact_name},",
             "",
-            f"{message.user_name} added you as an emergency contact in Deadman Switch, an app that asks "
+            f"{message.user_name} added you as an emergency contact in Travel Safe, an app that asks "
             "them to check in on a regular schedule.",
             "",
             "They didn't check in before their deadline, so we're letting you know. This doesn't "
@@ -63,7 +63,7 @@ def email_text(message: EmergencyMessage) -> str:
             f"Suggested next step: try to contact {message.user_name} directly. If you believe they are "
             "in danger, contact your local emergency services.",
             "",
-            "Deadman Switch",
+            "Travel Safe",
         ]
     )
 
@@ -74,7 +74,7 @@ def email_html(message: EmergencyMessage) -> str:
     return f"""<!doctype html>
 <html><body style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#1c2024;line-height:1.5;max-width:560px;margin:0 auto;padding:24px">
 <p>Hi {escape(message.contact_name)},</p>
-<p>{name} added you as an emergency contact in Deadman Switch, an app that asks them to check in on a regular schedule.</p>
+<p>{name} added you as an emergency contact in Travel Safe, an app that asks them to check in on a regular schedule.</p>
 <p>They didn't check in before their deadline, so we're letting you know. This doesn't necessarily mean something is wrong: their phone may be lost or out of battery, or they may simply have forgotten.</p>
 <h3 style="margin-bottom:4px">What we know</h3>
 <ul>
@@ -87,13 +87,13 @@ def email_html(message: EmergencyMessage) -> str:
 <p><a href="{escape(message.link_url, quote=True)}" style="display:inline-block;background:#1f6f5c;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none">View details and map</a></p>
 <p style="color:#60646c;font-size:13px">This private link expires {escape(format_human(message.link_expires_at, zone))}. Please don't share it.</p>
 <p>Suggested next step: try to contact {name} directly. If you believe they are in danger, contact your local emergency services.</p>
-<p style="color:#60646c;font-size:13px">Deadman Switch</p>
+<p style="color:#60646c;font-size:13px">Travel Safe</p>
 </body></html>"""
 
 
 def short_text(message: EmergencyMessage) -> str:
     return (
-        f"Deadman Switch: {message.user_name} missed a scheduled safety check-in "
+        f"Travel Safe: {message.user_name} missed a scheduled safety check-in "
         f"(due {format_human(message.deadline_at, message.timezone)}). This may not mean something is "
         f"wrong. Please try to contact them. Details and last known location: {message.link_url}"
     )

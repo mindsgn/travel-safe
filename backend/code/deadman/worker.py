@@ -47,7 +47,7 @@ def run_once(
 
 
 def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(description="Deadman Switch worker")
+    parser = argparse.ArgumentParser(description="Travel Safe worker")
     parser.add_argument("--once", action="store_true", help="run a single pass and exit")
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")

@@ -54,7 +54,7 @@ def test_email_html_escapes_user_content():
 
 def test_short_text_is_concise_and_includes_link():
     text = short_text(_message())
-    assert text.startswith("Deadman Switch: Thandi missed")
+    assert text.startswith("Travel Safe: Thandi missed")
     assert text.endswith("https://safe.example/e/token")
     assert len(text) < 320
 

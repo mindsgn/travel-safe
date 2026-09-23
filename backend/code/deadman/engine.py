@@ -1,4 +1,4 @@
-"""Deadman switch engine: the authoritative expiry decision.
+"""Travel Safe engine: the authoritative expiry decision.
 
 Idempotency is enforced at three levels so repeated or concurrent worker runs can
 never double-notify:
@@ -123,7 +123,7 @@ def trigger_user(
                         to_db(now),
                     ),
                 )
-    logger.info("Deadman switch triggered for user %s (event %s)", user_id, event_id)
+    logger.info("Travel Safe triggered for user %s (event %s)", user_id, event_id)
     return event_id
 
 

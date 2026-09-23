@@ -90,7 +90,7 @@ def render_page(view: dict, mapbox_token: str | None, nonce: str) -> str:
         badge = '<span class="badge triggered">Missed check-in</span>'
         headline = f"{escape(name)} missed a scheduled safety check-in"
         intro = (
-            f"{escape(name)} uses Deadman Switch to check in on a regular schedule and listed you as an "
+            f"{escape(name)} uses Travel Safe to check in on a regular schedule and listed you as an "
             "emergency contact. They didn't check in before their deadline. This doesn't necessarily mean "
             "something is wrong."
         )
@@ -162,7 +162,7 @@ def render_page(view: dict, mapbox_token: str | None, nonce: str) -> str:
 
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex,nofollow"><title>Deadman Switch: {escape(name)}</title>
+<meta name="robots" content="noindex,nofollow"><title>Travel Safe: {escape(name)}</title>
 <style>{PAGE_STYLE}</style></head>
 <body><main>
 {badge}<h1>{headline}</h1><p>{intro}</p>
