@@ -1,86 +1,59 @@
+import '@/tasks';
+
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { ActivityIndicator, useColorScheme, View } from 'react-native';
-import { Suspense, useEffect, useState } from 'react';
-import * as Mapbox from '@rnmapbox/maps';
-import { db, DATABASE_NAME } from "@/db/client";
-import { SQLiteProvider } from 'expo-sqlite';
+import { useEffect } from 'react';
+import { useColorScheme } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import { migrate } from "drizzle-orm/expo-sqlite/migrator";
-import migrations from "@/drizzle/migrations";
-import { configureMapbox } from '@/lib/map/mapbox';
-import { GestureHandlerRootView } from "react-native-gesture-handler"
+import { useForegroundSync } from '@/hooks/use-foreground-sync';
+import { registerBackgroundSync } from '@/lib/background';
+import { configureNotifications } from '@/lib/notifications';
+import { getAppStore, useAppStore } from '@/store';
 
-SplashScreen.preventAutoHideAsync();
-configureMapbox(undefined, Mapbox as { setAccessToken: (token: string) => void });
-
-function RootNavigator() {
-  return (
-    <GestureHandlerRootView>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(home)" />
-        <Stack.Screen name="place-search" />
-        <Stack.Screen name="trusted-contacts" />
-        <Stack.Screen name="trusted-contacts/onboarding" />
-        <Stack.Screen name="trusted-contacts/add" />
-      </Stack>
-    </GestureHandlerRootView>
-  );
-}
+SplashScreen.preventAutoHideAsync().catch(() => undefined);
+configureNotifications().catch(() => undefined);
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [migrationReady, setMigrationReady] = useState(false);
-  const [migrationFailed, setMigrationFailed] = useState(false);
+  const hydrated = useAppStore((state) => state.hydrated);
+  const onboardingComplete = useAppStore((state) => state.onboardingComplete);
+  const registered = useAppStore((state) => state.registered);
 
   useEffect(() => {
-    let active = true;
-    migrate(db, migrations)
-      .then(() => {
-        if (active) setMigrationReady(true);
-      })
-      .catch(() => {
-        if (active) setMigrationFailed(true);
-      });
-    return () => {
-      active = false;
-    };
+    void getAppStore().getState().hydrate();
   }, []);
 
-  if (migrationFailed) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }} />
-    );
-  }
+  useEffect(() => {
+    if (hydrated) SplashScreen.hideAsync().catch(() => undefined);
+  }, [hydrated]);
 
-  if (!migrationReady) {
-    return (
-      <Suspense fallback={<ActivityIndicator size="large" />}>
-        <SQLiteProvider
-          databaseName={DATABASE_NAME}
-          options={{ enableChangeListener: true }}
-          useSuspense
-        >
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-            <ActivityIndicator size="large" />
-          </View>
-        </SQLiteProvider>
-      </Suspense>
-    );
-  }
+  useEffect(() => {
+    if (registered) void registerBackgroundSync();
+  }, [registered]);
+
+  useForegroundSync(hydrated && registered);
+
+  if (!hydrated) return null;
+
+  const ready = onboardingComplete && registered;
 
   return (
-  <Suspense fallback={<ActivityIndicator size="large" />}>
-    <SQLiteProvider
-      databaseName={DATABASE_NAME}
-      options={{ enableChangeListener: true }}
-      useSuspense
-    >
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <AnimatedSplashOverlay />
-        <RootNavigator />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Protected guard={ready}>
+            <Stack.Screen name="(home)" />
+            <Stack.Screen name="contacts" />
+            <Stack.Screen name="settings" />
+          </Stack.Protected>
+          <Stack.Protected guard={!ready}>
+            <Stack.Screen name="onboarding" />
+          </Stack.Protected>
+        </Stack>
       </ThemeProvider>
-    </SQLiteProvider>
-    </Suspense>
+    </GestureHandlerRootView>
   );
 }

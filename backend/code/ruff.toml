@@ -1,0 +1,11 @@
+line-length = 120
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[lint.per-file-ignores]
+# Inline HTML/CSS templates and long pytest fixture signatures read better unwrapped.
+"deadman/web/emergency_page.py" = ["E501"]
+"deadman/notifications/messages.py" = ["E501"]
+"tests/*" = ["E501"]

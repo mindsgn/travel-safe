@@ -1,0 +1,78 @@
+appId: makers.travel.safe
+---
+# Emergency contacts: validation, add (phone + WhatsApp), view details, edit,
+# and remove. The native contact picker is system UI and is not automated.
+# Simulators have no enrolled biometrics or passcode, so the settings
+# protection guard lets actions through without a prompt.
+
+- runFlow: subflows/complete-onboarding.yaml
+
+- tapOn:
+    id: "home-contacts"
+- assertVisible:
+    id: "contacts-screen"
+- assertVisible:
+    id: "contact-row-0"
+
+# Validation: a name and at least one of email or phone are required.
+- tapOn:
+    id: "contacts-add"
+- assertVisible:
+    id: "contact-edit-screen"
+- tapOn:
+    id: "contact-save"
+- assertVisible:
+    id: "contact-name-error"
+- assertVisible:
+    id: "contact-form-error"
+
+# WhatsApp without a phone number is rejected.
+- tapOn:
+    id: "contact-name"
+- inputText: "Lerato"
+- tapOn:
+    id: "contact-whatsapp"
+- tapOn:
+    id: "contact-save"
+- assertVisible:
+    id: "contact-phone-error"
+
+- tapOn:
+    id: "contact-phone"
+- inputText: "+27821234567"
+- hideKeyboard
+- tapOn:
+    id: "contact-save"
+- extendedWaitUntil:
+    visible:
+      id: "contact-detail"
+    timeout: 10000
+- assertVisible: "WhatsApp"
+
+# Edit the contact's name.
+- tapOn:
+    id: "contact-edit"
+- assertVisible:
+    id: "contact-edit-screen"
+- tapOn:
+    id: "contact-name"
+- eraseText
+- inputText: "Lerato M"
+- hideKeyboard
+- tapOn:
+    id: "contact-save"
+- assertVisible: "Lerato M"
+
+# Remove it.
+- tapOn:
+    id: "contact-remove"
+- runFlow:
+    when:
+      visible: "Remove"
+    commands:
+      - tapOn:
+          text: "Remove"
+          index: 1
+- assertVisible:
+    id: "contacts-screen"
+- assertNotVisible: "Lerato M"

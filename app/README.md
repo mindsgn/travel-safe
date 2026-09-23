@@ -1,79 +1,88 @@
-# Travel Safe · Frontend
+# Deadman Switch · Mobile app
 
-Expo React Native app for **Travel Safe**, a mobile safety companion. The home screen is a Mapbox map with a neighbourhood crime heatmap, live GPS, and trip planning (origin, destination, pathway).
+Expo React Native app for **Deadman Switch**, a personal safety check-in. You check in with one
+tap on a schedule you choose. If you miss a deadline, the backend notifies your emergency
+contacts with your last known location.
 
-Built with Expo SDK 57, React Native 0.86 (New Architecture), React 19, and TypeScript.
+Built with Expo SDK 57, React Native 0.86 (New Architecture), React 19, TypeScript and Zustand.
 
 ## Features
 
-- **Trip planning** — search origin and destination (Mapbox Geocoding, with Cape Town mock suggestions when no token is set), or use current location as origin. The app calls `POST /api/v1/trips` and draws the pathway plus a crime heatmap along the corridor.
-- **Crime heatmap** — Mapbox `HeatmapLayer` from backend cells (or local mock zones until a trip is planned). Red is more dangerous, green is safer.
-- **Live location** — foreground GPS via `expo-location` (`hooks/use-map-location.ts`) with a recoverable status card.
-- **Native maps** — `@rnmapbox/maps` behind `components/map/safety-map.tsx`. Native-only; web falls back to placeholder copy.
+- **Onboarding.** It walks through the problem and solution, your name, permissions (what each is
+  for, why, and what happens if you say no), optional emergency contacts, and the check-in
+  interval (1 day to 1 year), ending with a first check-in.
+- **Home.** It shows your status, last check-in, next deadline, interval, contacts, location
+  status, a large Check In button, device health warnings, and the latest alert with
+  per-contact delivery status.
+- **Honest sync.** "Checked in" appears only after the server confirms. Offline check-ins are
+  saved on the phone, clearly labelled as not yet sent, and retried on launch, on return to the
+  foreground, in the background, or with "Send now".
+- **Reminders.** Local notifications fire before the deadline (a reminder and a final warning)
+  and at the deadline. They are rescheduled after every sync.
+- **Contacts.** You can add, edit, view and remove contacts. The system picker shares only the
+  chosen person, so the app never reads your address book. A contact needs an email, a phone
+  number or both, plus an optional WhatsApp flag. You can also send an SMS invite from your
+  own phone.
+- **Account.** It covers your name, interval, permissions, journey sharing (optional background
+  location), security (Face ID, fingerprint or passcode for settings, and optionally for check-in),
+  and account deletion.
 
 ## Project structure
 
 ```
 src/
-  app/            Expo Router routes and layouts (Home screen in (home)/index.tsx)
-  components/     UI: map/, trip/, safety-legend, themed-text/view
-  constants/      theme tokens
-  hooks/          use-map-location, use-trip-plan, use-emergency-location
-  i18n/           strings.ts — single source of all user-visible copy
-  lib/            API client, geocoding, heatmap GeoJSON, map camera helpers
-e2e/              Maestro YAML scenarios (including e2e/trip-plan.yaml)
+  app/            Expo Router routes: onboarding/, (home)/, contacts/, settings/
+  components/     UI building blocks (check-in button, status card, contact form…)
+  hooks/          Screen hooks (permissions, health, foreground sync)
+  i18n/           strings.ts: all user-visible copy
+  lib/            Pure, tested logic: API client, auth session, offline queue, sync,
+                  reminders, permissions, location, device state, secure storage
+  store/          Zustand app store (persisted to the Keychain / Keystore)
+  tasks.ts        Background task definitions (sync + journey location)
+e2e/              Maestro flows (onboarding, check-in, offline check-in, contacts, account)
 ```
 
-Keep screens thin and put reusable logic in `lib/`, shared UI in `components/`, all copy in `i18n/strings.ts`, and a stable `testID` on every interactive control. See [AGENTS.md](./AGENTS.md) for the full convention guide.
+Keep screens thin: put logic in `lib/`, copy in `i18n/strings.ts`, and a stable `testID` on
+every control. See [AGENTS.md](./AGENTS.md).
 
 ## Getting started
 
 ```bash
-cp .env.example .env.local
-# set EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN and RNMAPBOX_MAPS_DOWNLOAD_TOKEN
-npm install
-npx expo run:ios
-# or: npx expo run:android
+cp .env.example .env     # EXPO_PUBLIC_API_BASE_URL, reminder offsets
+yarn install
+npx expo prebuild --clean
+npx expo run:ios         # or: npx expo run:android
 ```
 
-Mapbox requires a **development build** (`expo run:ios` / `expo run:android`), not Expo Go. Rebuild native projects after adding the Mapbox plugin.
+A development build is required (background tasks, secure storage and local authentication
+don't fully work in Expo Go). Run the backend first; see [backend/README.md](../backend/README.md).
 
-The API defaults to `http://127.0.0.1:8000`. Start the backend with `../backend/scripts/app.sh run`.
+## Tests
 
-### Scripts
+```bash
+npx tsc --noEmit
+yarn lint
+yarn test
+maestro test e2e/        # needs a running backend and a dev build on a simulator/emulator
+```
 
-| Command | Purpose |
-|---|---|
-| `npm start` | Start the Expo dev server (Metro) |
-| `npm run ios` | Build & run the iOS dev build (`expo run:ios`) |
-| `npm run android` | Build & run the Android dev build (`expo run:android`) |
-| `npm run web` | Run the web target (`expo start --web`) — the map screen is native-only |
-| `npm test` | Unit tests (Jest / jest-expo) |
-| `npm run lint` | ESLint (`expo lint`) |
+`e2e/check-in-offline.yaml` toggles airplane mode, which Maestro supports only on Android.
 
-## Native builds
+## Decisions
 
-`ios/` and `android/` are generated and gitignored. Regenerate them with `npx expo prebuild`.
-
-- **iOS scene support** — `expo-build-properties` sets `ios.enableSceneSupport: true`.
-- **Location permissions** — `expo-location` (`locationWhenInUsePermission`). Bundle id: `makers.travel.safe`; scheme: `travelsafe`.
-- **Mapbox** — `@rnmapbox/maps` plugin reads `RNMAPBOX_MAPS_DOWNLOAD_TOKEN` (secret downloads token). Runtime tiles and geocoding use `EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN`. Never commit tokens.
-
-Expo config lives in `app.config.ts`.
-
-## Testing
-
-- **Unit** — `npm test`. Logic lives next to the code as `*.test.ts` / `*.test.tsx`.
-- **E2E** — [Maestro](https://maestro.mobile.dev) flows in `e2e/`. `e2e/trip-plan.yaml` searches origin and destination and expects a pathway; run the backend locally so `POST /api/v1/trips` succeeds.
-
-  ```bash
-  maestro test e2e/safety-map.yaml
-  maestro test e2e/trip-plan.yaml
-  maestro test e2e/map/
-  ```
-
-## Limitations
-
-- Corridor crime cells from the API are **mock intensity**, not live SAPS incident pins.
-- Place search falls back to a small Cape Town fixture list when Mapbox Geocoding is unavailable.
-- `@rnmapbox/maps` is **iOS/Android only**; the web target builds but the map screen does not render on web.
+- **Storage.** All local data (tokens, profile, contacts cache, offline queue) is chunked JSON in
+  `expo-secure-store` with `AFTER_FIRST_UNLOCK`, so background tasks can read it while the phone
+  is locked. Nothing is kept in AsyncStorage, and there is no local database.
+- **Authentication** is passwordless and device-bound. The account is created at the onboarding
+  Name step, because contacts are stored server-side and the server must know you before it can
+  watch your deadline. That step needs a connection and shows a clear error if you're offline.
+- **Permissions requested:** notifications and foreground location during onboarding, background
+  location only when you turn on Journey sharing, and biometrics only when Face ID is first used.
+  Contacts (system picker), SMS (composer), battery status and the SIM country (for phone number
+  formatting) need no runtime permission.
+- **Background sync** uses `expo-background-task` with a 15-minute minimum. The OS decides the
+  real cadence. Background sync only keeps reminders and the queue current, because the server
+  worker triggers the switch whether or not the phone is on.
+- **Picker details on Android.** The system contact picker may need contacts access on some
+  Android versions to read the chosen person's details. If that fails, the form asks you to type
+  the details instead.

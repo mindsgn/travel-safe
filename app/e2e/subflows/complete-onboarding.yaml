@@ -1,0 +1,77 @@
+appId: makers.travel.safe
+---
+# Shared setup: fresh install through onboarding to the home screen, with one
+# email-only emergency contact. Requires the backend at EXPO_PUBLIC_API_BASE_URL.
+
+- launchApp:
+    clearState: true
+    clearKeychain: true
+
+- assertVisible:
+    id: "onboarding-index"
+- tapOn:
+    id: "onboarding-start"
+
+- tapOn:
+    id: "onboarding-name-input"
+- inputText: "Thandi"
+- hideKeyboard
+- tapOn:
+    id: "onboarding-name-continue"
+
+- assertVisible:
+    id: "onboarding-permissions"
+- tapOn:
+    id: "permission-notifications-allow"
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+- tapOn:
+    id: "permission-location-allow"
+- runFlow:
+    when:
+      visible: "Allow While Using App"
+    commands:
+      - tapOn: "Allow While Using App"
+- runFlow:
+    when:
+      visible: "While using the app"
+    commands:
+      - tapOn: "While using the app"
+- tapOn:
+    id: "onboarding-permissions-continue"
+
+- assertVisible:
+    id: "onboarding-contacts"
+- tapOn:
+    id: "onboarding-contacts-add"
+- tapOn:
+    id: "contact-name"
+- inputText: "Sipho Dlamini"
+- tapOn:
+    id: "contact-email"
+- inputText: "sipho@example.com"
+- hideKeyboard
+- tapOn:
+    id: "contact-save"
+- assertVisible:
+    id: "contact-row-0"
+- tapOn:
+    id: "onboarding-contacts-continue"
+
+- assertVisible:
+    id: "onboarding-interval"
+- tapOn:
+    id: "onboarding-interval-continue"
+
+- assertVisible:
+    id: "onboarding-ready"
+- tapOn:
+    id: "onboarding-ready-start"
+
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000

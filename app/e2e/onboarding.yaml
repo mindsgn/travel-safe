@@ -1,0 +1,67 @@
+appId: makers.travel.safe
+---
+# Onboarding: problem/solution, name validation, permissions explained, the
+# optional contacts step (skipped here), interval warning, and the first check-in.
+
+- launchApp:
+    clearState: true
+    clearKeychain: true
+
+- assertVisible:
+    id: "onboarding-index"
+- tapOn:
+    id: "onboarding-start"
+
+# Name is required before an account is created.
+- tapOn:
+    id: "onboarding-name-continue"
+- assertVisible:
+    id: "onboarding-name-error"
+- tapOn:
+    id: "onboarding-name-input"
+- inputText: "Thandi"
+- hideKeyboard
+- tapOn:
+    id: "onboarding-name-continue"
+
+# Each permission explains what it is for, why, and what happens if denied.
+- assertVisible:
+    id: "permission-notifications"
+- assertVisible:
+    id: "permission-location"
+- assertVisible:
+    id: "permission-contacts"
+- assertVisible: "If you say no"
+- tapOn:
+    id: "onboarding-permissions-continue"
+
+# Contacts are optional; skipping warns that nobody will be notified.
+- assertVisible:
+    id: "onboarding-contacts"
+- assertVisible: "Without contacts, nobody will be notified if you miss a check-in."
+- tapOn:
+    id: "onboarding-contacts-continue"
+
+# Interval presets with the required warning.
+- assertVisible:
+    id: "interval-warning"
+- assertVisible: "If you don’t check in before this period expires, your Deadman Switch will be triggered."
+- tapOn:
+    id: "interval-3"
+- tapOn:
+    id: "onboarding-interval-continue"
+
+- assertVisible:
+    id: "onboarding-ready"
+- assertVisible: "3 days"
+- tapOn:
+    id: "onboarding-ready-start"
+
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+- assertVisible:
+    id: "status-safe"
+- assertVisible:
+    id: "health-no_contacts"

@@ -1,0 +1,74 @@
+appId: makers.travel.safe
+---
+# Account: profile, check-in settings, permissions and security are reachable;
+# the interval can be changed; deleting the account returns to onboarding.
+
+- runFlow: subflows/complete-onboarding.yaml
+
+- tapOn: "Account"
+- assertVisible:
+    id: "account-screen"
+- assertVisible:
+    id: "account-name"
+- assertVisible:
+    id: "account-interval"
+- assertVisible:
+    id: "account-contacts"
+- assertVisible:
+    id: "account-permissions"
+- assertVisible:
+    id: "account-security"
+
+# Permissions screen lists each permission with its status.
+- tapOn:
+    id: "account-permissions"
+- assertVisible:
+    id: "settings-permissions"
+- assertVisible:
+    id: "permission-notifications-status"
+- tapOn:
+    id: "screen-back"
+
+# Change interval (no auth prompt on simulators without biometrics or passcode).
+- tapOn:
+    id: "account-interval"
+- assertVisible:
+    id: "settings-interval"
+- tapOn:
+    id: "interval-14"
+- tapOn:
+    id: "settings-interval-save"
+- extendedWaitUntil:
+    visible:
+      id: "settings-interval-message"
+    timeout: 10000
+- assertVisible: "Saved.*"
+- tapOn:
+    id: "screen-back"
+
+# Journey sharing is explained and says it never counts as a check-in.
+- tapOn:
+    id: "account-journey"
+- assertVisible:
+    id: "settings-journey"
+- assertVisible: "Location updates never count as a check-in. Only you can check in."
+- tapOn:
+    id: "screen-back"
+
+# Delete account.
+- scrollUntilVisible:
+    element:
+      id: "account-delete"
+- tapOn:
+    id: "account-delete"
+- runFlow:
+    when:
+      visible: "Delete your account?"
+    commands:
+      - tapOn:
+          text: "Delete account"
+          index: 1
+      - extendedWaitUntil:
+          visible:
+            id: "onboarding-index"
+          timeout: 15000

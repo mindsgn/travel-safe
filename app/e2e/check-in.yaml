@@ -1,0 +1,42 @@
+appId: makers.travel.safe
+---
+# Home: status, deadline details, and a server-confirmed check-in. Then the
+# app is backgrounded and reopened and must still show the synced state.
+
+- runFlow: subflows/complete-onboarding.yaml
+
+- assertVisible:
+    id: "status-card"
+- assertVisible:
+    id: "status-safe"
+- assertVisible:
+    id: "home-last-check-in"
+- assertVisible:
+    id: "home-next-deadline"
+- assertVisible:
+    id: "home-interval"
+- assertVisible:
+    id: "home-contacts"
+- assertVisible:
+    id: "home-location"
+
+- tapOn:
+    id: "check-in-button"
+- extendedWaitUntil:
+    visible:
+      id: "home-check-in-result"
+    timeout: 15000
+# Only a server-confirmed check-in says "Checked in".
+- assertVisible: "Checked in.*"
+- assertNotVisible:
+    id: "home-pending-banner"
+
+# Reopen after backgrounding.
+- pressKey: home
+- launchApp
+- assertVisible:
+    id: "home-screen"
+- assertVisible:
+    id: "status-safe"
+- assertNotVisible:
+    id: "home-pending-banner"

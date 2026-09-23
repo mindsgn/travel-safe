@@ -1,0 +1,27 @@
+appId: makers.travel.safe
+---
+# Network unavailable during check-in: the app must say the check-in is only
+# saved on the phone, then send it once connectivity returns.
+# Android only: Maestro cannot toggle airplane mode on the iOS simulator.
+
+- runFlow: subflows/complete-onboarding.yaml
+
+- setAirplaneMode: enabled
+- tapOn:
+    id: "check-in-button"
+- extendedWaitUntil:
+    visible:
+      id: "home-check-in-result"
+    timeout: 20000
+- assertVisible: "Saved on this phone.*"
+- assertNotVisible: "Checked in.*"
+- assertVisible:
+    id: "home-pending-banner"
+
+- setAirplaneMode: disabled
+- tapOn:
+    id: "home-sync-now"
+- extendedWaitUntil:
+    notVisible:
+      id: "home-pending-banner"
+    timeout: 20000

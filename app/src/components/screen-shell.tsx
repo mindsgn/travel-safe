@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -14,65 +14,69 @@ export type ScreenShellProps = {
   subtitle?: string;
   testID?: string;
   footer?: ReactNode;
+  showBack?: boolean;
   children: ReactNode;
 };
 
-export function ScreenShell({ title, subtitle, testID, footer, children }: ScreenShellProps) {
+export function ScreenShell({ title, subtitle, testID, footer, showBack = true, children }: ScreenShellProps) {
   const theme = useTheme();
 
   return (
     <ThemedView testID={testID} style={styles.root}>
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-        <View style={styles.header}>
-          <Pressable
-            testID="screen-back"
-            accessibilityRole="button"
-            accessibilityLabel={strings.trustedContacts.nav.back}
-            onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
-            hitSlop={8}
-            style={({ pressed }) => [
-              styles.backButton,
-              { backgroundColor: theme.backgroundElement },
-              pressed && styles.pressed,
-            ]}>
-            <ThemedText type="smallBold">←</ThemedText>
-          </Pressable>
-          <View style={styles.headerText}>
-            {title ? <ThemedText type="smallBold">{title}</ThemedText> : null}
-            {subtitle ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                {subtitle}
-              </ThemedText>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
+        <KeyboardAvoidingView style={styles.safeArea} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View style={styles.header}>
+            {showBack ? (
+              <Pressable
+                testID="screen-back"
+                accessibilityRole="button"
+                accessibilityLabel={strings.common.back}
+                onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+                hitSlop={8}
+                style={({ pressed }) => [
+                  styles.backButton,
+                  { backgroundColor: theme.backgroundElement },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText type="smallBold">←</ThemedText>
+              </Pressable>
             ) : null}
+            <View style={styles.headerText}>
+              {title ? (
+                <ThemedText type="subtitle" accessibilityRole="header" style={styles.title}>
+                  {title}
+                </ThemedText>
+              ) : null}
+              {subtitle ? <ThemedText themeColor="textSecondary">{subtitle}</ThemedText> : null}
+            </View>
           </View>
-        </View>
 
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}>
-          {children}
-        </ScrollView>
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.content}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}>
+            {children}
+          </ScrollView>
 
-        {footer ? <View style={styles.footer}>{footer}</View> : null}
+          {footer ? <View style={styles.footer}>{footer}</View> : null}
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
+  root: { flex: 1 },
+  safeArea: { flex: 1 },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: MaxContentWidth,
     gap: Spacing.three,
     paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
+    paddingTop: Spacing.two,
+    paddingBottom: Spacing.three,
   },
   backButton: {
     width: 36,
@@ -81,16 +85,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerText: {
-    flex: 1,
-    gap: Spacing.half,
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  scroll: {
-    flex: 1,
-  },
+  headerText: { gap: Spacing.two },
+  title: { fontSize: 28, lineHeight: 34 },
+  pressed: { opacity: 0.7 },
+  scroll: { flex: 1 },
   content: {
     alignSelf: 'center',
     width: '100%',
@@ -100,6 +98,9 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   footer: {
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: MaxContentWidth,
     paddingHorizontal: Spacing.three,
     paddingTop: Spacing.two,
     paddingBottom: Spacing.three,

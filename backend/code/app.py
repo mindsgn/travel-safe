@@ -1,3 +1,3 @@
-from travel_safe.main import create_app
+from deadman.api.app import create_app
 
 app = create_app()

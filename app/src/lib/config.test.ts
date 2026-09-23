@@ -1,4 +1,4 @@
-import { defaultApiBaseUrl, getApiBaseUrl, getMapboxToken, trimEnv } from './config';
+import { defaultApiBaseUrl, getApiBaseUrl, getReminderOffsetsMs, trimEnv } from './config';
 
 describe('config', () => {
   it('trims env values', () => {
@@ -13,13 +13,22 @@ describe('config', () => {
   });
 
   it('strips trailing slashes from the API base URL', () => {
-    expect(getApiBaseUrl({ EXPO_PUBLIC_API_BASE_URL: 'http://localhost:8000/' })).toBe(
-      'http://localhost:8000',
+    expect(getApiBaseUrl({ EXPO_PUBLIC_API_BASE_URL: 'https://api.example.com/' })).toBe(
+      'https://api.example.com',
     );
   });
 
-  it('reads the Mapbox public token', () => {
-    expect(getMapboxToken({})).toBe('');
-    expect(getMapboxToken({ EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN: ' pk.test ' })).toBe('pk.test');
+  it('parses reminder offsets in hours', () => {
+    expect(getReminderOffsetsMs({ EXPO_PUBLIC_REMINDER_OFFSETS_HOURS: '12, 1' })).toEqual({
+      reminder: 12 * 3_600_000,
+      final: 3_600_000,
+    });
+  });
+
+  it('ignores unset or malformed reminder offsets', () => {
+    expect(getReminderOffsetsMs({})).toBeNull();
+    expect(getReminderOffsetsMs({ EXPO_PUBLIC_REMINDER_OFFSETS_HOURS: 'soon' })).toBeNull();
+    expect(getReminderOffsetsMs({ EXPO_PUBLIC_REMINDER_OFFSETS_HOURS: '1,2' })).toBeNull();
+    expect(getReminderOffsetsMs({ EXPO_PUBLIC_REMINDER_OFFSETS_HOURS: '24,-1' })).toBeNull();
   });
 });

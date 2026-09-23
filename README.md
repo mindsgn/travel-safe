@@ -1,12 +1,16 @@
-# Travel Safe
+# Deadman Switch
 
-Travel Safe is a mobile safety companion built by The Makers for the Builders Table 2026 24-hour hackathon.
+Deadman Switch is a personal safety check-in app built by The Makers. You check in with one tap
+on a schedule you choose. If you miss a check-in, the people you've chosen are notified with your
+last known location. It is a safety net, not an emergency service.
 
 ## Quickstart
 
 1. Clone the repository and open the project root.
-2. Set up and run the FastAPI backend using [backend/README.md](backend/README.md).
-3. Set up and run the Expo mobile app using [frontend/README.md](frontend/README.md).
+2. Set up and run the FastAPI backend and worker using [backend/README.md](backend/README.md).
+3. Set up and run the Expo mobile app using [app/README.md](app/README.md).
+
+Store submission notes are in [app-store.md](app-store.md).
 
 ## CI
 
@@ -15,7 +19,7 @@ Travel Safe is a mobile safety companion built by The Makers for the Builders Ta
 
 Both workflows run on every pull request into `main` or `staging` and must pass before merge.
 
-The backend deploys automatically through Render after merge; there is no manual deploy step or GitHub Actions deploy job. The frontend has no CI deploy step: run it locally with `expo start` and test through Expo Go. EAS distribution is still to be decided.
+The backend deploys automatically through Render after merge; there is no manual deploy step or GitHub Actions deploy job. The mobile app has no CI deploy step: run it locally as a development build (`npx expo run:ios` / `run:android`). EAS distribution is still to be decided.
 
 ### One-time manual setup
 
