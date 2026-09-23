@@ -45,7 +45,7 @@ appId: makers.travel.safe
 # Interval presets with the required warning.
 - assertVisible:
     id: "interval-warning"
-- assertVisible: "If you don’t check in before this period expires, your Deadman Switch will be triggered."
+- assertVisible: "If you don’t check in before this period expires, your Travel Safe will be triggered."
 - tapOn:
     id: "interval-3"
 - tapOn:

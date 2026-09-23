@@ -1,5 +1,5 @@
 export const strings = {
-  appName: 'Deadman Switch',
+  appName: 'Travel Safe',
   common: {
     continue: 'Continue',
     back: 'Back',
@@ -36,7 +36,7 @@ export const strings = {
       problemTitle: 'The problem',
       problemBody:
         'When you travel, run alone, or live on your own, nobody may notice for days if something goes wrong.',
-      solutionTitle: 'How Deadman Switch helps',
+      solutionTitle: 'How Travel Safe helps',
       solutionBody:
         'You check in with one tap on a schedule you choose. If you miss a check-in, the people you pick are told, with your last known location.',
       trustBody:
@@ -51,7 +51,7 @@ export const strings = {
       missing: 'Please add your name.',
       creating: 'Setting up…',
       failedOffline: 'You seem to be offline. Connect to the internet to create your account.',
-      failedServer: 'We couldn’t reach Deadman Switch right now. Please try again in a moment.',
+      failedServer: 'We couldn’t reach Travel Safe right now. Please try again in a moment.',
     },
     permissions: {
       title: 'Permissions, explained',
@@ -76,11 +76,11 @@ export const strings = {
     interval: {
       title: 'How often will you check in?',
       body: 'Pick a rhythm that fits your life. Shorter is safer; longer is more relaxed.',
-      warning: 'If you don’t check in before this period expires, your Deadman Switch will be triggered.',
+      warning: 'If you don’t check in before this period expires, your Travel Safe will be triggered.',
     },
     ready: {
       title: 'You’re all set',
-      body: 'Do your first check-in to turn on your Deadman Switch. After that, just tap Check In before each deadline.',
+      body: 'Do your first check-in to turn on your Travel Safe. After that, just tap Check In before each deadline.',
       summaryInterval: 'Check in every',
       summaryContacts: 'Emergency contacts',
       noContacts: 'None yet',
@@ -160,7 +160,7 @@ export const strings = {
       triggered: 'Your contacts were notified',
     },
     toneBody: {
-      setup: 'Check in once to start your Deadman Switch.',
+      setup: 'Check in once to start your Travel Safe.',
       safe: 'Next check-in due in {remaining}.',
       due_soon: 'Only {remaining} left. Check in now.',
       overdue: 'Check in now. Your contacts may be notified at any moment.',
@@ -235,7 +235,7 @@ export const strings = {
       body: 'Your check-in reached the server. Next deadline: {when}.',
     },
     journeyTitle: 'Journey sharing is on',
-    journeyBody: 'Deadman Switch is saving your recent location for your emergency contacts.',
+    journeyBody: 'Travel Safe is saving your recent location for your emergency contacts.',
   },
   relative: {
     today: 'today at {time}',
@@ -301,7 +301,7 @@ export const strings = {
     },
     invite: {
       message:
-        'Hi, it’s {name}. I’ve added you as an emergency contact in Deadman Switch. If I ever miss a scheduled safety check-in, you’ll get a message with my last known location. No need to do anything now.',
+        'Hi, it’s {name}. I’ve added you as an emergency contact in Travel Safe. If I ever miss a scheduled safety check-in, you’ll get a message with my last known location. No need to do anything now.',
     },
   },
   account: {
@@ -323,7 +323,7 @@ export const strings = {
     deleteAccount: 'Delete account',
     deleteConfirmTitle: 'Delete your account?',
     deleteConfirmBody:
-      'Your Deadman Switch stops immediately and your location data is erased. The rest of your data is permanently deleted after 3 months.',
+      'Your Travel Safe stops immediately and your location data is erased. The rest of your data is permanently deleted after 3 months.',
     deleteFailed: 'We couldn’t delete your account. Check your connection and try again.',
     version: 'Version {version}',
     authFailed: 'We couldn’t sign you in to the server. Check-ins are being saved on this phone.',

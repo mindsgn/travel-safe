@@ -17,7 +17,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
   return {
     ...config,
-    name: config.name ?? 'Deadman Switch',
+    name: config.name ?? 'Travel Safe',
     slug: config.slug ?? 'travel-safe',
     plugins,
   };

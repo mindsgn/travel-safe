@@ -1,6 +1,6 @@
-# Deadman Switch · Mobile app
+# Travel Safe · Mobile app
 
-Expo React Native app for **Deadman Switch**, a personal safety check-in. You check in with one
+Expo React Native app for **Travel Safe**, a personal safety check-in. You check in with one
 tap on a schedule you choose. If you miss a deadline, the backend notifies your emergency
 contacts with your last known location.
 
