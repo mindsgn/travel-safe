@@ -37,18 +37,11 @@ class Settings:
     resend_api_key: str | None = field(default=None, repr=False)
     resend_from_email: str | None = None
 
-    twilio_account_sid: str | None = None
-    twilio_auth_token: str | None = field(default=None, repr=False)
-    twilio_whatsapp_from: str | None = None
-    twilio_whatsapp_content_sid: str | None = None
-    twilio_sms_from: str | None = None
+    whatsapp_bot_url: str = ""
+    whatsapp_bot_token: str | None = field(default=None, repr=False)
 
     mapbox_public_token: str | None = None
     mapbox_server_token: str | None = field(default=None, repr=False)
-
-    @property
-    def status_callback_url(self) -> str:
-        return f"{self.public_base_url.rstrip('/')}/webhooks/twilio/status"
 
     def emergency_url(self, token: str) -> str:
         return f"{self.public_base_url.rstrip('/')}/e/{token}"
@@ -70,11 +63,8 @@ class Settings:
             worker_interval_seconds=_int(env, "DEADMAN_WORKER_INTERVAL_SECONDS", 60),
             resend_api_key=_optional(env, "RESEND_API_KEY"),
             resend_from_email=_optional(env, "RESEND_FROM_EMAIL"),
-            twilio_account_sid=_optional(env, "TWILIO_ACCOUNT_SID"),
-            twilio_auth_token=_optional(env, "TWILIO_AUTH_TOKEN"),
-            twilio_whatsapp_from=_optional(env, "TWILIO_WHATSAPP_FROM"),
-            twilio_whatsapp_content_sid=_optional(env, "TWILIO_WHATSAPP_CONTENT_SID"),
-            twilio_sms_from=_optional(env, "TWILIO_SMS_FROM"),
+            whatsapp_bot_url=env.get("WHATSAPP_BOT_URL", "").strip(),
+            whatsapp_bot_token=_optional(env, "WHATSAPP_BOT_TOKEN"),
             mapbox_public_token=_optional(env, "MAPBOX_PUBLIC_TOKEN"),
             mapbox_server_token=_optional(env, "MAPBOX_SERVER_TOKEN"),
         )

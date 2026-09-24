@@ -11,9 +11,9 @@ from deadman.notifications.providers import (
     EmailProvider,
     MessagingProvider,
     ResendEmailProvider,
-    TwilioMessagingProvider,
     UnconfiguredEmailProvider,
     UnconfiguredMessagingProvider,
+    WhatsAppBotMessagingProvider,
 )
 
 
@@ -24,15 +24,8 @@ def build_email_provider(settings: Settings) -> EmailProvider:
 
 
 def build_messaging_provider(settings: Settings) -> MessagingProvider:
-    if settings.twilio_account_sid and settings.twilio_auth_token:
-        return TwilioMessagingProvider(
-            account_sid=settings.twilio_account_sid,
-            auth_token=settings.twilio_auth_token,
-            status_callback_url=settings.status_callback_url,
-            whatsapp_from=settings.twilio_whatsapp_from,
-            whatsapp_content_sid=settings.twilio_whatsapp_content_sid,
-            sms_from=settings.twilio_sms_from,
-        )
+    if settings.whatsapp_bot_url:
+        return WhatsAppBotMessagingProvider(settings.whatsapp_bot_url, settings.whatsapp_bot_token)
     return UnconfiguredMessagingProvider()
 
 

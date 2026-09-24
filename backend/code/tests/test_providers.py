@@ -1,21 +1,38 @@
 import json
-from urllib.parse import parse_qs
 
 import httpx
+import pytest
 
 from deadman.config import Settings
 from deadman.geocoding import MapboxGeocoder
 from deadman.notifications.providers import (
     ResendEmailProvider,
-    TwilioMessagingProvider,
     UnconfiguredEmailProvider,
     UnconfiguredMessagingProvider,
+    WhatsAppBotMessagingProvider,
 )
 from deadman.services import build_email_provider, build_geocoder, build_messaging_provider
 
 
 def _client(handler):
     return httpx.Client(transport=httpx.MockTransport(handler))
+
+
+def _bot(handler, token=None):
+    return WhatsAppBotMessagingProvider("http://bot.local", token=token, client=_client(handler))
+
+
+def _form_fields(request: httpx.Request) -> dict[str, str]:
+    boundary = request.headers["content-type"].split("boundary=")[1].encode()
+    content = request.content.split(b"--" + boundary)
+    fields: dict[str, str] = {}
+    for part in content:
+        if b"Content-Disposition: form-data; name=" not in part:
+            continue
+        header, _, value = part.partition(b"\r\n\r\n")
+        name = header.split(b'name="')[1].split(b'"')[0].decode()
+        fields[name] = value.decode().strip()
+    return fields
 
 
 def test_resend_sends_expected_request():
@@ -52,48 +69,57 @@ def test_network_error_is_retryable():
     assert result.error == "ConnectError" and result.retryable
 
 
-def _twilio(handler, content_sid=None, sms_from="+15550000000"):
-    return TwilioMessagingProvider(
-        account_sid="AC1",
-        auth_token="tok",
-        status_callback_url="https://safe.example/webhooks/twilio/status",
-        whatsapp_from="+15551112222",
-        whatsapp_content_sid=content_sid,
-        sms_from=sms_from,
-        client=_client(handler),
-    )
-
-
-def test_twilio_whatsapp_uses_template_when_configured():
+def test_whatsapp_bot_sends_multipart_phone_and_message():
     captured = {}
 
-    def handler(request):
-        captured["form"] = parse_qs(request.content.decode())
+    def handler(request: httpx.Request) -> httpx.Response:
         captured["url"] = str(request.url)
-        return httpx.Response(201, json={"sid": "SM1", "status": "queued"})
+        captured["headers"] = request.headers
+        captured["fields"] = _form_fields(request)
+        return httpx.Response(200, json={"ok": True, "id": "3EB0C1", "jid": "2782@s.whatsapp.net"})
 
-    result = _twilio(handler, content_sid="HX123").send_whatsapp(
-        to="+27821234567", body="text", variables={"1": "Thandi"}
-    )
-    assert result.ok and result.provider_message_id == "SM1"
-    form = captured["form"]
-    assert form["To"] == ["whatsapp:+27821234567"]
-    assert form["From"] == ["whatsapp:+15551112222"]
-    assert form["ContentSid"] == ["HX123"]
-    assert json.loads(form["ContentVariables"][0]) == {"1": "Thandi"}
-    assert form["StatusCallback"] == ["https://safe.example/webhooks/twilio/status"]
-    assert "/Accounts/AC1/Messages.json" in captured["url"]
+    result = _bot(handler).send_whatsapp(to="+27821234567", body="Travel Safe: Thandi missed...")
+    assert result.ok and result.provider_message_id == "3EB0C1"
+    assert captured["url"].endswith("/send")
+    assert captured["fields"]["phone"] == "+27821234567"
+    assert captured["fields"]["message"] == "Travel Safe: Thandi missed..."
+    assert captured["headers"]["content-type"].startswith("multipart/form-data")
 
 
-def test_twilio_immediate_failure_status_is_a_failure():
-    provider = _twilio(lambda _r: httpx.Response(201, json={"sid": "SM1", "status": "failed", "error_code": 63016}))
-    result = provider.send_whatsapp(to="+27821234567", body="b", variables={})
-    assert not result.ok and result.error == "twilio_63016"
+def test_whatsapp_bot_sends_token_when_configured():
+    captured = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["auth"] = request.headers.get("authorization")
+        return httpx.Response(200, json={"ok": True, "id": "M1"})
+
+    assert _bot(handler, token="secret").send_whatsapp(to="+27821234567", body="b").ok
+    assert captured["auth"] == "Bearer secret"
 
 
-def test_twilio_sms_without_sender_is_not_configured():
-    provider = _twilio(lambda _r: httpx.Response(201, json={}), sms_from=None)
-    assert provider.send_sms(to="+27821234567", body="b").error == "channel_not_configured"
+def test_whatsapp_bot_ok_false_is_still_a_failure():
+    provider = _bot(lambda _r: httpx.Response(200, json={"ok": False, "error": "boom"}))
+    result = provider.send_whatsapp(to="+27821234567", body="b")
+    assert not result.ok and result.error == "whatsapp_send_failed" and result.retryable
+
+
+def test_whatsapp_bot_400_is_not_retryable():
+    provider = _bot(lambda _r: httpx.Response(400, json={"ok": False, "error": "missing phone"}))
+    result = provider.send_whatsapp(to="", body="b")
+    assert not result.ok and result.error == "http_400" and result.retryable is False
+
+
+def test_whatsapp_bot_503_means_not_connected_and_is_not_retried():
+    provider = _bot(lambda _r: httpx.Response(503, json={"ok": False, "error": "not connected"}))
+    result = provider.send_whatsapp(to="+27821234567", body="b")
+    assert not result.ok and result.error == "whatsapp_not_connected" and result.retryable is False
+
+
+@pytest.mark.parametrize("status", [429, 500, 502])
+def test_whatsapp_bot_transient_errors_are_retryable(status):
+    provider = _bot(lambda _r: httpx.Response(status, json={}))
+    result = provider.send_whatsapp(to="+27821234567", body="b")
+    assert not result.ok and result.error == f"http_{status}" and result.retryable is True
 
 
 def test_factories_fall_back_to_unconfigured_providers():
@@ -108,12 +134,11 @@ def test_factories_build_real_providers_from_settings():
     settings = Settings(
         resend_api_key="k",
         resend_from_email="a@example.com",
-        twilio_account_sid="AC",
-        twilio_auth_token="t",
+        whatsapp_bot_url="http://bot.local",
         mapbox_server_token="sk",
     )
     assert isinstance(build_email_provider(settings), ResendEmailProvider)
-    assert isinstance(build_messaging_provider(settings), TwilioMessagingProvider)
+    assert isinstance(build_messaging_provider(settings), WhatsAppBotMessagingProvider)
     assert isinstance(build_geocoder(settings), MapboxGeocoder)
 
 
@@ -135,10 +160,14 @@ def test_settings_from_env():
             "DEADMAN_CORS_ORIGINS": "https://a.example, https://b.example",
             "DEADMAN_ARCHIVE_RETENTION_DAYS": "90",
             "RESEND_API_KEY": "  ",
+            "WHATSAPP_BOT_URL": "http://bot.local/",
+            "WHATSAPP_BOT_TOKEN": "token",
         }
     )
     assert settings.db_path == "/tmp/x.db"
     assert settings.cors_origins == ("https://a.example", "https://b.example")
     assert settings.archive_retention.days == 90
     assert settings.resend_api_key is None
-    assert "secret" not in repr(Settings(resend_api_key="secret", twilio_auth_token="secret"))
+    assert settings.whatsapp_bot_url == "http://bot.local/"
+    assert settings.whatsapp_bot_token == "token"
+    assert "secret" not in repr(Settings(resend_api_key="secret", whatsapp_bot_token="secret"))

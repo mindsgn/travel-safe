@@ -155,6 +155,58 @@ MIGRATIONS: tuple[str, ...] = (
     );
     CREATE INDEX idx_archived_purge ON archived_profiles (purge_after);
     """,
+    """
+    -- SMS was dropped as a channel: rebuild notification_events without 'sms'.
+    -- Save link->notification references first, then re-attach the survivors.
+    -- Links to purged sms notifications stay detached (NULL).
+    CREATE TEMP TABLE notification_links AS
+        SELECT id AS link_id, notification_event_id FROM emergency_links
+        WHERE notification_event_id IS NOT NULL;
+
+    CREATE TABLE notification_events_new (
+        id TEXT PRIMARY KEY,
+        deadman_event_id TEXT NOT NULL REFERENCES deadman_events (id) ON DELETE CASCADE,
+        contact_id TEXT REFERENCES emergency_contacts (id) ON DELETE SET NULL,
+        notification_type TEXT NOT NULL DEFAULT 'emergency_alert',
+        channel TEXT NOT NULL CHECK (channel IN ('email', 'whatsapp')),
+        recipient TEXT NOT NULL,
+        recipient_name TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending'
+            CHECK (status IN ('pending', 'sending', 'sent', 'delivered', 'failed', 'cancelled')),
+        retryable INTEGER NOT NULL DEFAULT 1,
+        attempts INTEGER NOT NULL DEFAULT 0,
+        provider_message_id TEXT,
+        failure_reason TEXT,
+        created_at TEXT NOT NULL,
+        sent_at TEXT,
+        updated_at TEXT NOT NULL,
+        UNIQUE (deadman_event_id, contact_id, channel)
+    );
+    INSERT INTO notification_events_new (
+        id, deadman_event_id, contact_id, notification_type, channel, recipient,
+        recipient_name, status, retryable, attempts, provider_message_id,
+        failure_reason, created_at, sent_at, updated_at
+    )
+    SELECT id, deadman_event_id, contact_id, notification_type, channel, recipient,
+           recipient_name, status, retryable, attempts, provider_message_id,
+           failure_reason, created_at, sent_at, updated_at
+    FROM notification_events WHERE channel != 'sms';
+    DROP TABLE notification_events;
+    ALTER TABLE notification_events_new RENAME TO notification_events;
+
+    UPDATE emergency_links
+    SET notification_event_id = (
+        SELECT l.notification_event_id FROM notification_links l WHERE l.link_id = emergency_links.id
+    )
+    WHERE id IN (
+        SELECT l.link_id FROM notification_links l
+        JOIN notification_events ne ON ne.id = l.notification_event_id
+    );
+    DROP TABLE notification_links;
+
+    CREATE INDEX idx_notifications_status ON notification_events (status);
+    CREATE INDEX idx_notifications_provider ON notification_events (provider_message_id);
+    """,
 )
 
 

@@ -10,10 +10,9 @@ def _expire(register, check_in, clock, interval=1):
 
 
 def test_channels_for_contact():
-    assert channels_for_contact("a@example.com", None, False) == ["email"]
-    assert channels_for_contact(None, "+27821234567", False) == ["sms"]
-    assert channels_for_contact(None, "+27821234567", True) == ["whatsapp"]
-    assert channels_for_contact("a@example.com", "+27821234567", True) == ["email", "whatsapp"]
+    assert channels_for_contact("a@example.com", None) == ["email"]
+    assert channels_for_contact(None, "+27821234567") == ["whatsapp"]
+    assert channels_for_contact("a@example.com", "+27821234567") == ["email", "whatsapp"]
 
 
 def test_inactive_user_never_triggers(register, clock, run_worker):
@@ -68,8 +67,7 @@ def test_multiple_contacts_each_get_their_channels(db, register, check_in, add_c
     clock.advance(days=1, seconds=1)
     run_worker()
     assert sorted(item["to"] for item in email.sent) == ["b@example.com", "e@example.com"]
-    assert [item["to"] for item in messaging.sms] == ["+27820000001"]
-    assert [item["to"] for item in messaging.whatsapp] == ["+27820000002"]
+    assert [item["to"] for item in messaging.whatsapp] == ["+27820000001", "+27820000002"]
     statuses = {row["status"] for row in db.execute("SELECT status FROM notification_events")}
     assert statuses == {"sent"}
 

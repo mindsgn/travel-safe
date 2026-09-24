@@ -44,7 +44,7 @@ worker runs.
 | `deadman/accounts.py` | Passwordless device-bound auth: register, login, refresh rotation, logout |
 | `deadman/checkins.py`, `switch.py` | Check-ins and deadline rules |
 | `deadman/engine.py` | Finds expired switches, triggers events, queues notifications |
-| `deadman/notifications/` | Message copy, Resend and Twilio providers, delivery dispatcher |
+| `deadman/notifications/` | Message copy, Resend (email) and whatsapp-bot messaging providers, delivery dispatcher |
 | `deadman/retention.py` | Location, link, session, and archived-profile cleanup |
 | `deadman/web/emergency_page.py` | Public emergency page (Mapbox GL JS) |
 | `deadman/api/` | HTTP routes, schemas, dependencies |
@@ -69,7 +69,6 @@ All `/api/v1` routes except `auth/register`, `auth/login` and `auth/refresh` req
 | `GET /api/v1/switch/status`, `/switch/deadline`, `/switch/events/latest` | Authoritative switch state |
 | `GET /e/{token}` | Emergency page for contacts (HTML) |
 | `GET /api/v1/emergency/{token}` | Emergency page data (JSON) |
-| `POST /webhooks/twilio/status` | Twilio delivery status callback (signature verified) |
 | `GET /health` | Liveness |
 
 ## Design decisions
@@ -86,12 +85,11 @@ These choices resolve points the specification left open.
   per `(event, contact, channel)`. A notification is claimed before sending. If the process dies
   mid-send, the row stays in `sending` and is not retried automatically, because a stuck row is
   better than alerting someone twice.
-- **Failures are never recorded as success.** A provider error, a missing configuration
-  (`channel_not_configured`), or a failed Twilio status callback leaves the notification `failed`
-  with a reason.
-- **Channels.** Contacts with an email get an email via Resend. Contacts with a phone get
-  WhatsApp if flagged, otherwise SMS, both via Twilio. WhatsApp requires an approved template
-  (`TWILIO_WHATSAPP_CONTENT_SID`).
+- **Failures are never recorded as success.** A provider error or a missing configuration
+  (`channel_not_configured`) leaves the notification `failed` with a reason.
+- **Channels.** Contacts with an email get an email via Resend. Contacts with a phone get a
+  WhatsApp message through the whatsapp-bot gateway (`WHATSAPP_BOT_URL`), which pairs once via
+  QR code. The phone channel ignores the `whatsapp` contact flag: any phone number is messaged.
 - **Emergency links.** There is one unguessable link per notification, and only its SHA-256 hash
   is stored. Links expire after 30 days and never expose internal IDs.
 - **Locations.** Journey points are deleted after 24 hours unless they are tied to an emergency

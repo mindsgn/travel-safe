@@ -1,6 +1,7 @@
 import sqlite3
 
 from deadman import worker
+from deadman.db import MIGRATIONS
 
 
 def test_worker_once_runs_a_full_pass(tmp_path, monkeypatch):
@@ -8,7 +9,7 @@ def test_worker_once_runs_a_full_pass(tmp_path, monkeypatch):
     monkeypatch.setenv("DEADMAN_DB_PATH", str(db_path))
     worker.main(["--once"])
     version = sqlite3.connect(db_path).execute("PRAGMA user_version").fetchone()[0]
-    assert version == 1
+    assert version == len(MIGRATIONS)
 
 
 def test_run_once_report_is_empty_without_work(run_worker):

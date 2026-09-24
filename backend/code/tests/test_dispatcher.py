@@ -1,4 +1,3 @@
-from deadman.notifications.dispatcher import apply_delivery_status
 from deadman.notifications.providers import NOT_CONFIGURED, SendResult
 
 
@@ -54,7 +53,7 @@ def test_failure_then_success_on_retry(db, register, check_in, add_contact, cloc
 
 
 def test_unconfigured_channel_fails_visibly_and_is_not_retried(db, register, check_in, add_contact, clock, run_worker, messaging):
-    messaging.sms_result = NOT_CONFIGURED
+    messaging.whatsapp_result = NOT_CONFIGURED
     _trigger(register, check_in, add_contact, clock, run_worker, email=None, phone="+27821234567")
     clock.advance(minutes=1)
     run_worker()
@@ -62,7 +61,7 @@ def test_unconfigured_channel_fails_visibly_and_is_not_retried(db, register, che
     assert row["status"] == "failed"
     assert row["failure_reason"] == "channel_not_configured"
     assert row["retryable"] == 0
-    assert len(messaging.sms) == 1
+    assert len(messaging.whatsapp) == 1
 
 
 def test_whatsapp_failure_is_not_marked_successful(db, client, register, check_in, add_contact, clock, run_worker, messaging):
@@ -102,20 +101,3 @@ def test_pending_notifications_cancelled_when_user_checks_in(db, settings, regis
     check_in(account)
     assert _notification(db)["status"] == "cancelled"
     assert email.sent == []
-
-
-def test_delivery_callback_updates_status(db, register, check_in, add_contact, clock, run_worker, messaging):
-    _trigger(register, check_in, add_contact, clock, run_worker, email=None, phone="+27821234567", whatsapp=True)
-    assert apply_delivery_status(db, "SMwa", "delivered", None, clock())
-    assert _notification(db)["status"] == "delivered"
-    assert not apply_delivery_status(db, "SMwa", "undelivered", "63016", clock())
-    assert _notification(db)["status"] == "delivered"
-
-
-def test_delivery_failure_callback_marks_failed(db, register, check_in, add_contact, clock, run_worker):
-    _trigger(register, check_in, add_contact, clock, run_worker, email=None, phone="+27821234567")
-    assert apply_delivery_status(db, "SMsms", "undelivered", "30003", clock())
-    row = _notification(db)
-    assert row["status"] == "failed"
-    assert row["failure_reason"] == "delivery_failed:30003"
-    assert apply_delivery_status(db, "SMsms", "queued", None, clock()) is False

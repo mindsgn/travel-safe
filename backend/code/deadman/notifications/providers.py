@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import logging
 from dataclasses import dataclass
 from typing import Protocol
@@ -10,7 +9,6 @@ import httpx
 logger = logging.getLogger(__name__)
 
 RESEND_URL = "https://api.resend.com/emails"
-TWILIO_MESSAGES_URL = "https://api.twilio.com/2010-04-01/Accounts/{sid}/Messages.json"
 
 
 @dataclass(frozen=True)
@@ -31,9 +29,7 @@ class EmailProvider(Protocol):
 
 
 class MessagingProvider(Protocol):
-    def send_whatsapp(self, *, to: str, body: str, variables: dict[str, str]) -> SendResult: ...
-
-    def send_sms(self, *, to: str, body: str) -> SendResult: ...
+    def send_whatsapp(self, *, to: str, body: str) -> SendResult: ...
 
 
 def _http_failure(error: httpx.HTTPError) -> SendResult:
@@ -51,11 +47,52 @@ class UnconfiguredEmailProvider:
 
 
 class UnconfiguredMessagingProvider:
-    def send_whatsapp(self, *, to: str, body: str, variables: dict[str, str]) -> SendResult:
+    def send_whatsapp(self, *, to: str, body: str) -> SendResult:
         return NOT_CONFIGURED
 
-    def send_sms(self, *, to: str, body: str) -> SendResult:
-        return NOT_CONFIGURED
+
+class WhatsAppBotMessagingProvider:
+    """Sends WhatsApp messages through the whatsapp-bot HTTP gateway.
+
+    The gateway pairs once via QR code (WhatsApp > Linked Devices) and exposes
+    POST /send expecting multipart fields `phone` and `message`. It returns
+    {"ok": true, "id": ...} on success and errors like {ok: false, error} with a
+    non-2xx status otherwise.
+    """
+
+    def __init__(
+        self, base_url: str, token: str | None = None, client: httpx.Client | None = None
+    ) -> None:
+        self._base = base_url.rstrip("/")
+        self._token = token
+        self._client = client or httpx.Client(timeout=30)
+
+    def send_whatsapp(self, *, to: str, body: str) -> SendResult:
+        headers = {"Authorization": f"Bearer {self._token}"} if self._token else {}
+        try:
+            response = self._client.post(
+                f"{self._base}/send",
+                headers=headers,
+                files={"phone": (None, to), "message": (None, body)},
+            )
+            response.raise_for_status()
+        except httpx.HTTPStatusError as error:
+            return self._status_failure(error.response.status_code)
+        except httpx.HTTPError as error:
+            logger.warning("whatsapp-bot send failed: %s", type(error).__name__)
+            return _http_failure(error)
+        payload = response.json()
+        if not payload.get("ok"):
+            return SendResult(ok=False, error="whatsapp_send_failed", retryable=True)
+        return SendResult(ok=True, provider_message_id=payload.get("id"))
+
+    @staticmethod
+    def _status_failure(status: int) -> SendResult:
+        if status == 503:
+            # The gateway is not connected to WhatsApp (no paired device).
+            return SendResult(ok=False, error="whatsapp_not_connected", retryable=False)
+        retryable = status == 429 or status >= 500
+        return SendResult(ok=False, error=f"http_{status}", retryable=retryable)
 
 
 class ResendEmailProvider:
@@ -79,63 +116,3 @@ class ResendEmailProvider:
         except httpx.HTTPError as error:
             logger.warning("Resend send failed: %s", type(error).__name__)
             return _http_failure(error)
-
-
-class TwilioMessagingProvider:
-    """WhatsApp via the WhatsApp Business Platform through Twilio, plus plain SMS.
-
-    Business-initiated WhatsApp messages require a pre-approved template; set
-    TWILIO_WHATSAPP_CONTENT_SID to its Content SID. Without it the body is sent as
-    free-form text, which only works inside a 24h session or the Twilio sandbox.
-    """
-
-    def __init__(
-        self,
-        *,
-        account_sid: str,
-        auth_token: str,
-        status_callback_url: str,
-        whatsapp_from: str | None,
-        whatsapp_content_sid: str | None,
-        sms_from: str | None,
-        client: httpx.Client | None = None,
-    ) -> None:
-        self._sid = account_sid
-        self._token = auth_token
-        self._callback = status_callback_url
-        self._whatsapp_from = whatsapp_from
-        self._content_sid = whatsapp_content_sid
-        self._sms_from = sms_from
-        self._client = client or httpx.Client(timeout=15)
-
-    def _post(self, data: dict[str, str]) -> SendResult:
-        try:
-            response = self._client.post(
-                TWILIO_MESSAGES_URL.format(sid=self._sid),
-                auth=(self._sid, self._token),
-                data={**data, "StatusCallback": self._callback},
-            )
-            response.raise_for_status()
-            payload = response.json()
-        except httpx.HTTPError as error:
-            logger.warning("Twilio send failed: %s", type(error).__name__)
-            return _http_failure(error)
-        if payload.get("status") in {"failed", "undelivered"}:
-            return SendResult(ok=False, error=f"twilio_{payload.get('error_code')}", retryable=False)
-        return SendResult(ok=True, provider_message_id=payload.get("sid"))
-
-    def send_whatsapp(self, *, to: str, body: str, variables: dict[str, str]) -> SendResult:
-        if not self._whatsapp_from:
-            return NOT_CONFIGURED
-        data = {"From": f"whatsapp:{self._whatsapp_from}", "To": f"whatsapp:{to}"}
-        if self._content_sid:
-            data["ContentSid"] = self._content_sid
-            data["ContentVariables"] = json.dumps(variables)
-        else:
-            data["Body"] = body
-        return self._post(data)
-
-    def send_sms(self, *, to: str, body: str) -> SendResult:
-        if not self._sms_from:
-            return NOT_CONFIGURED
-        return self._post({"From": self._sms_from, "To": to, "Body": body})

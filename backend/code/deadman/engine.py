@@ -22,12 +22,12 @@ from deadman.timeutil import to_db
 logger = logging.getLogger(__name__)
 
 
-def channels_for_contact(email: str | None, phone: str | None, whatsapp: bool) -> list[str]:
+def channels_for_contact(email: str | None, phone: str | None) -> list[str]:
     channels: list[str] = []
     if email:
         channels.append("email")
     if phone:
-        channels.append("whatsapp" if whatsapp else "sms")
+        channels.append("whatsapp")
     return channels
 
 
@@ -104,7 +104,7 @@ def trigger_user(
             "SELECT * FROM emergency_contacts WHERE user_id = ? ORDER BY created_at", (user_id,)
         ).fetchall()
         for contact in contacts:
-            for channel in channels_for_contact(contact["email"], contact["phone"], bool(contact["whatsapp"])):
+            for channel in channels_for_contact(contact["email"], contact["phone"]):
                 connection.execute(
                     """
                     INSERT OR IGNORE INTO notification_events (

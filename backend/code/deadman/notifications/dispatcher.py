@@ -22,19 +22,11 @@ from deadman.notifications.messages import (
     email_subject,
     email_text,
     short_text,
-    whatsapp_template_variables,
 )
 from deadman.notifications.providers import EmailProvider, MessagingProvider, SendResult
 from deadman.timeutil import from_db, to_db
 
 logger = logging.getLogger(__name__)
-
-DELIVERY_STATUS_MAP = {
-    "delivered": "delivered",
-    "read": "delivered",
-    "failed": "failed",
-    "undelivered": "failed",
-}
 
 
 @dataclass
@@ -140,11 +132,7 @@ class Dispatcher:
                 idempotency_key=f"{claim.notification_id}-{claim.attempt}",
             )
         if claim.channel == "whatsapp":
-            return self._messaging.send_whatsapp(
-                to=claim.recipient, body=short_text(message), variables=whatsapp_template_variables(message)
-            )
-        if claim.channel == "sms":
-            return self._messaging.send_sms(to=claim.recipient, body=short_text(message))
+            return self._messaging.send_whatsapp(to=claim.recipient, body=short_text(message))
         return SendResult(ok=False, error="unknown_channel", retryable=False)
 
     def _record(self, connection: sqlite3.Connection, claim: _Claim, result: SendResult, now: datetime) -> None:
@@ -186,35 +174,3 @@ class Dispatcher:
             self._record(connection, claim, result, now)
             (summary.sent if result.ok else summary.failed).append(notification_id)
         return summary
-
-
-def apply_delivery_status(
-    connection: sqlite3.Connection,
-    provider_message_id: str,
-    provider_status: str,
-    error_code: str | None,
-    now: datetime,
-) -> bool:
-    """Apply a provider delivery callback. Never downgrades a delivered message."""
-    status = DELIVERY_STATUS_MAP.get(provider_status)
-    if status is None:
-        return False
-    with transaction(connection):
-        if status == "delivered":
-            cursor = connection.execute(
-                """
-                UPDATE notification_events SET status = 'delivered', updated_at = ?
-                WHERE provider_message_id = ? AND status IN ('sent', 'delivered')
-                """,
-                (to_db(now), provider_message_id),
-            )
-        else:
-            cursor = connection.execute(
-                """
-                UPDATE notification_events
-                SET status = 'failed', retryable = 0, failure_reason = ?, updated_at = ?
-                WHERE provider_message_id = ? AND status = 'sent'
-                """,
-                (f"delivery_failed:{error_code or provider_status}", to_db(now), provider_message_id),
-            )
-    return cursor.rowcount > 0

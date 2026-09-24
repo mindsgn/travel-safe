@@ -45,17 +45,11 @@ class FakeEmail:
 @dataclass
 class FakeMessaging:
     whatsapp_result: SendResult = field(default_factory=lambda: SendResult(ok=True, provider_message_id="SMwa"))
-    sms_result: SendResult = field(default_factory=lambda: SendResult(ok=True, provider_message_id="SMsms"))
     whatsapp: list[dict] = field(default_factory=list)
-    sms: list[dict] = field(default_factory=list)
 
-    def send_whatsapp(self, *, to: str, body: str, variables: dict[str, str]) -> SendResult:
-        self.whatsapp.append({"to": to, "body": body, "variables": variables})
+    def send_whatsapp(self, *, to: str, body: str) -> SendResult:
+        self.whatsapp.append({"to": to, "body": body})
         return self.whatsapp_result
-
-    def send_sms(self, *, to: str, body: str) -> SendResult:
-        self.sms.append({"to": to, "body": body})
-        return self.sms_result
 
 
 class FixedGeocoder:
@@ -79,7 +73,6 @@ def settings(tmp_path) -> Settings:
         db_path=str(tmp_path / "deadman.db"),
         public_base_url="https://safe.example",
         mapbox_public_token="pk.test",
-        twilio_auth_token="twilio-secret",
         # Tests move the clock by days or months; token expiry has its own dedicated tests.
         access_token_ttl=timedelta(days=3650),
         refresh_token_ttl=timedelta(days=7300),

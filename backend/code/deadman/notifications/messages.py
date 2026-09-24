@@ -97,12 +97,3 @@ def short_text(message: EmergencyMessage) -> str:
         f"(due {format_human(message.deadline_at, message.timezone)}). This may not mean something is "
         f"wrong. Please try to contact them. Details and last known location: {message.link_url}"
     )
-
-
-def whatsapp_template_variables(message: EmergencyMessage) -> dict[str, str]:
-    """Variables for an approved WhatsApp template: {{1}} name, {{2}} due time, {{3}} link."""
-    return {
-        "1": message.user_name,
-        "2": format_human(message.deadline_at, message.timezone),
-        "3": message.link_url,
-    }

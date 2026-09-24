@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import base64
 import hashlib
 import hmac
 import secrets
 import uuid
-from collections.abc import Mapping
 
 
 def new_id() -> str:
@@ -28,17 +26,3 @@ def hash_secret(value: str) -> str:
 
 def secrets_match(candidate: str, expected_hash: str) -> bool:
     return hmac.compare_digest(hash_secret(candidate), expected_hash)
-
-
-def twilio_signature(auth_token: str, url: str, params: Mapping[str, str]) -> str:
-    payload = url + "".join(f"{key}{params[key]}" for key in sorted(params))
-    digest = hmac.new(auth_token.encode("utf-8"), payload.encode("utf-8"), hashlib.sha1).digest()
-    return base64.b64encode(digest).decode("ascii")
-
-
-def verify_twilio_signature(
-    auth_token: str, url: str, params: Mapping[str, str], signature: str | None
-) -> bool:
-    if not signature:
-        return False
-    return hmac.compare_digest(twilio_signature(auth_token, url, params), signature)

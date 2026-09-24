@@ -6,7 +6,6 @@ from deadman.notifications.messages import (
     email_subject,
     email_text,
     short_text,
-    whatsapp_template_variables,
 )
 from deadman.timeutil import format_human
 from tests.conftest import START
@@ -57,12 +56,6 @@ def test_short_text_is_concise_and_includes_link():
     assert text.startswith("Travel Safe: Thandi missed")
     assert text.endswith("https://safe.example/e/token")
     assert len(text) < 320
-
-
-def test_whatsapp_template_variables():
-    variables = whatsapp_template_variables(_message())
-    assert variables["1"] == "Thandi"
-    assert variables["3"] == "https://safe.example/e/token"
 
 
 def test_format_human_falls_back_to_utc():

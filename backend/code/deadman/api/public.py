@@ -1,17 +1,14 @@
-"""Unauthenticated endpoints: the emergency page (capability-token access) and provider webhooks."""
+"""Unauthenticated endpoints: the emergency page (capability-token access)."""
 
 from __future__ import annotations
 
 import secrets
-from urllib.parse import parse_qsl
 
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter
 from fastapi.responses import HTMLResponse, JSONResponse
 
 from deadman.api.deps import AppSettings, Db, Now
 from deadman.links import resolve_link
-from deadman.notifications.dispatcher import apply_delivery_status
-from deadman.security import verify_twilio_signature
 from deadman.web.emergency_page import build_view, content_security_policy, render_page, render_unavailable
 
 router = APIRouter()
@@ -43,18 +40,3 @@ def emergency_data(token: str, db: Db, now: Now) -> JSONResponse:
         return JSONResponse({"error": {"code": "link_unavailable"}}, status_code=404, headers=PRIVATE_HEADERS)
     view = build_view(db, link["deadman_event_id"], link["expires_at"])
     return JSONResponse(view, headers=PRIVATE_HEADERS)
-
-
-@router.post("/webhooks/twilio/status")
-async def twilio_status(request: Request, db: Db, now: Now, settings: AppSettings) -> Response:
-    if not settings.twilio_auth_token:
-        return Response(status_code=404)
-    params = dict(parse_qsl((await request.body()).decode("utf-8"), keep_blank_values=True))
-    signature = request.headers.get("X-Twilio-Signature")
-    if not verify_twilio_signature(settings.twilio_auth_token, settings.status_callback_url, params, signature):
-        return Response(status_code=403)
-    message_sid = params.get("MessageSid")
-    status = params.get("MessageStatus")
-    if message_sid and status:
-        apply_delivery_status(db, message_sid, status, params.get("ErrorCode"), now)
-    return Response(status_code=204)
