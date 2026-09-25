@@ -110,8 +110,8 @@ def run_worker(db, settings, dispatcher, clock):
 
 
 @pytest.fixture
-def client(settings, clock):
-    app = create_app(settings, clock=clock)
+def client(settings, clock, messaging):
+    app = create_app(settings, clock=clock, messaging=messaging)
     with TestClient(app) as test_client:
         yield test_client
 

@@ -97,3 +97,22 @@ def short_text(message: EmergencyMessage) -> str:
         f"(due {format_human(message.deadline_at, message.timezone)}). This may not mean something is "
         f"wrong. Please try to contact them. Details and last known location: {message.link_url}"
     )
+
+
+def alert_test_text(user_name: str, contact_name: str) -> str:
+    """Rehearses the emergency alert to one number before the contact is saved.
+
+    Mirrors `short_text` so the recipient recognises a real alert, but says plainly
+    that it is a test: a false alarm that reads like a real one erodes trust in the
+    one alert that matters.
+
+    Deliberately carries no link. A real link needs a real triggered event, and a
+    fabricated one would show up in the user's own event history. Rehearsing the
+    send is enough: the gate exists to prove the number is reachable, not to
+    preview the map.
+    """
+    return (
+        f"Travel Safe: this is a test of the emergency switch for {contact_name}. If {user_name} ever "
+        "misses a scheduled safety check-in, you'll get a message like this one, with their last known "
+        "location. Nothing is wrong now and no action is needed."
+    )

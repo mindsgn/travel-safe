@@ -23,5 +23,9 @@ class ConflictError(DomainError):
     status_code = 409
 
 
+class ServiceUnavailableError(DomainError):
+    status_code = 503
+
+
 class ValidationFailed(DomainError):
     status_code = 422

@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from deadman.notifications.messages import (
     EmergencyMessage,
+    alert_test_text,
     email_html,
     email_subject,
     email_text,
@@ -55,6 +56,17 @@ def test_short_text_is_concise_and_includes_link():
     text = short_text(_message())
     assert text.startswith("Travel Safe: Thandi missed")
     assert text.endswith("https://safe.example/e/token")
+    assert len(text) < 320
+
+
+def test_alert_test_text_is_clearly_a_test_and_names_user_and_contact():
+    text = alert_test_text("Thandi", "Sipho")
+    assert text.startswith("Travel Safe: this is a test of the emergency switch for Sipho")
+    assert "Thandi" in text
+    assert "last known location" in text
+    # Must not read like a real alarm, and must not ship a link that has no event behind it.
+    assert "no action is needed" in text
+    assert "http" not in text
     assert len(text) < 320
 
 

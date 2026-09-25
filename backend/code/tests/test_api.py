@@ -10,6 +10,7 @@ PROTECTED = [
     ("get", "/api/v1/check-ins/status"),
     ("get", "/api/v1/contacts"),
     ("post", "/api/v1/contacts"),
+    ("post", "/api/v1/contacts/test-message"),
     ("get", "/api/v1/contacts/abc"),
     ("put", "/api/v1/contacts/abc"),
     ("delete", "/api/v1/contacts/abc"),

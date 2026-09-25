@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Response
 
 from deadman import accounts, checkins, contacts, engine, locations, profiles
-from deadman.api.deps import AppSettings, Db, Now, Token, UserId
+from deadman.api.deps import AppSettings, Db, Messaging, Now, Token, UserId
 from deadman.api.schemas import (
     CheckInRequest,
     ContactPayload,
@@ -17,6 +17,8 @@ from deadman.api.schemas import (
 )
 from deadman.checkins import DeviceState
 from deadman.db import transaction
+from deadman.errors import ServiceUnavailableError, ValidationFailed
+from deadman.notifications.messages import alert_test_text
 from deadman.profiles import validate_name
 
 router = APIRouter(prefix="/api/v1")
@@ -139,6 +141,39 @@ def list_contacts(db: Db, user_id: UserId) -> dict:
 def add_contact(payload: ContactPayload, db: Db, now: Now, settings: AppSettings, user_id: UserId) -> dict:
     contact = contacts.validate_contact(payload.name, payload.email, payload.phone, payload.whatsapp)
     return contacts.add_contact(db, user_id, contact, now, settings)
+
+
+def _test_alert_error_code(failure: str | None) -> str:
+    if failure in (None, "", "channel_not_configured"):
+        return "whatsapp_not_configured"
+    if failure == "whatsapp_not_connected":
+        return "whatsapp_not_connected"
+    return "whatsapp_test_failed"
+
+
+@router.post("/contacts/test-message")
+def test_contact_message(payload: ContactPayload, messaging: Messaging, db: Db, user_id: UserId) -> dict:
+    """Rehearses the emergency alert to a contact's number before they are saved.
+
+    The app gates saving on this: a phone number is only stored once it is known to
+    receive alerts, so a mistyped or unreachable number is caught at the point it is
+    entered rather than when it matters. Every phone number is alerted over WhatsApp
+    (see engine.channels_for_contact), so a number saved without the WhatsApp toggle
+    is verified exactly the same way.
+
+    Nothing is persisted and no real event is created: this is a send, not a trigger.
+    """
+    contact = contacts.validate_contact(payload.name, payload.email, payload.phone, payload.whatsapp)
+    if contact.phone is None:
+        raise ValidationFailed("phone_required", "A phone number is needed to send a test alert.", "phone")
+    user_name = profiles.get_profile(db, user_id)["name"]
+    result = messaging.send_whatsapp(to=contact.phone, body=alert_test_text(user_name, contact.name))
+    if not result.ok:
+        raise ServiceUnavailableError(
+            _test_alert_error_code(result.error),
+            "We couldn't send a test alert to this number. Check the number and try again.",
+        )
+    return {"sent": True, "message_id": result.provider_message_id}
 
 
 @router.get("/contacts/{contact_id}")

@@ -11,6 +11,7 @@ from deadman.accounts import authenticate
 from deadman.config import Settings
 from deadman.db import open_connection
 from deadman.errors import AuthError
+from deadman.notifications.providers import MessagingProvider
 
 
 def get_settings(request: Request) -> Settings:
@@ -30,6 +31,10 @@ def get_db(request: Request) -> Iterator[sqlite3.Connection]:
         connection.close()
 
 
+def get_messaging(request: Request) -> MessagingProvider:
+    return request.app.state.messaging
+
+
 def bearer_token(authorization: Annotated[str | None, Header()] = None) -> str:
     if not authorization:
         raise AuthError("missing_token")
@@ -43,6 +48,7 @@ Db = Annotated[sqlite3.Connection, Depends(get_db)]
 Now = Annotated[datetime, Depends(get_now)]
 AppSettings = Annotated[Settings, Depends(get_settings)]
 Token = Annotated[str, Depends(bearer_token)]
+Messaging = Annotated[MessagingProvider, Depends(get_messaging)]
 
 
 def current_user(db: Db, now: Now, token: Token) -> str:

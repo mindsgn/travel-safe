@@ -8,16 +8,23 @@ from deadman.api import public, routes
 from deadman.config import Settings
 from deadman.db import connect
 from deadman.errors import DomainError
+from deadman.notifications.providers import MessagingProvider
+from deadman.services import build_messaging_provider
 from deadman.timeutil import Clock, utc_now
 
 
-def create_app(settings: Settings | None = None, clock: Clock = utc_now) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    clock: Clock = utc_now,
+    messaging: MessagingProvider | None = None,
+) -> FastAPI:
     settings = settings or Settings.from_env()
     connect(settings.db_path).close()  # apply migrations once at startup
 
     app = FastAPI(title="Travel Safe API", version="1.0.0")
     app.state.settings = settings
     app.state.clock = clock
+    app.state.messaging = messaging or build_messaging_provider(settings)
     if settings.cors_origins:
         app.add_middleware(
             CORSMiddleware,

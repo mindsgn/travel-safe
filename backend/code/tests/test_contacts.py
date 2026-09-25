@@ -2,6 +2,7 @@ import pytest
 
 from deadman.contacts import normalize_phone, validate_contact
 from deadman.errors import ValidationFailed
+from deadman.notifications.providers import SendResult
 
 
 def test_contact_with_email_only_is_valid():
@@ -108,3 +109,76 @@ def test_users_cannot_access_each_others_contacts(client, register, add_contact)
     assert client.get(f"/api/v1/contacts/{contact['id']}", headers=intruder.headers).status_code == 404
     assert client.delete(f"/api/v1/contacts/{contact['id']}", headers=intruder.headers).status_code == 404
     assert client.get("/api/v1/contacts", headers=intruder.headers).json()["contacts"] == []
+
+
+@pytest.mark.parametrize("whatsapp", [True, False])
+def test_test_alert_sends_and_does_not_save(client, register, messaging, whatsapp):
+    """Every phone number is rehearsed before it is saved, WhatsApp toggle on or off."""
+    account = register("Thandi")
+    response = client.post(
+        "/api/v1/contacts/test-message",
+        json={"name": "Sipho", "phone": "+27821234567", "whatsapp": whatsapp},
+        headers=account.headers,
+    )
+    assert response.status_code == 200
+    assert response.json()["sent"] is True
+    [sent] = messaging.whatsapp
+    assert sent["to"] == "+27821234567"
+    assert "Sipho" in sent["body"]
+    assert "Thandi" in sent["body"]
+    assert client.get("/api/v1/contacts", headers=account.headers).json()["contacts"] == []
+
+
+@pytest.mark.parametrize(
+    ("failure", "code"),
+    [
+        (SendResult(ok=False, error="whatsapp_not_connected", retryable=False), "whatsapp_not_connected"),
+        (SendResult(ok=False, error="http_500", retryable=True), "whatsapp_test_failed"),
+        (SendResult(ok=False, error=None, retryable=False), "whatsapp_not_configured"),
+    ],
+)
+def test_test_alert_failure_is_reported(client, register, messaging, failure, code):
+    messaging.whatsapp_result = failure
+    account = register()
+    response = client.post(
+        "/api/v1/contacts/test-message",
+        json={"name": "Sipho", "phone": "+27821234567", "whatsapp": True},
+        headers=account.headers,
+    )
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == code
+    assert client.get("/api/v1/contacts", headers=account.headers).json()["contacts"] == []
+
+
+@pytest.mark.parametrize(
+    ("whatsapp", "code"),
+    [
+        (False, "phone_required"),
+        (True, "whatsapp_requires_phone"),
+    ],
+)
+def test_test_alert_requires_a_phone(client, register, messaging, whatsapp, code):
+    account = register()
+    response = client.post(
+        "/api/v1/contacts/test-message",
+        json={"name": "Sipho", "email": "sipho@example.com", "phone": None, "whatsapp": whatsapp},
+        headers=account.headers,
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == code
+    assert messaging.whatsapp == []
+
+
+def test_test_alert_does_not_create_a_deadman_event(client, register, check_in, messaging):
+    """A rehearsal is a send, not a trigger: it must not look like a real alarm later."""
+    account = register("Thandi")
+    check_in(account)
+    response = client.post(
+        "/api/v1/contacts/test-message",
+        json={"name": "Sipho", "phone": "+27821234567", "whatsapp": True},
+        headers=account.headers,
+    )
+    assert response.status_code == 200
+    status = client.get("/api/v1/switch/status", headers=account.headers).json()
+    assert status["state"] == "armed"
+    assert status["latest_event"] is None

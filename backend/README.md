@@ -65,6 +65,7 @@ All `/api/v1` routes except `auth/register`, `auth/login` and `auth/refresh` req
 | `POST /api/v1/check-ins` | Record a check-in (idempotent by `client_id`) |
 | `GET /api/v1/check-ins/latest`, `/check-ins/status` | Latest check-in, or check-in plus switch status |
 | `GET/POST /api/v1/contacts`, `GET/PUT/DELETE /api/v1/contacts/{id}` | Emergency contacts |
+| `POST /api/v1/contacts/test-message` | Sends a test alert to a phone number; the app only saves a number after this succeeds |
 | `POST /api/v1/locations`, `GET /api/v1/locations/last` | Upload location points (these never count as a check-in); last known location |
 | `GET /api/v1/switch/status`, `/switch/deadline`, `/switch/events/latest` | Authoritative switch state |
 | `GET /e/{token}` | Emergency page for contacts (HTML) |
@@ -90,6 +91,11 @@ These choices resolve points the specification left open.
 - **Channels.** Contacts with an email get an email via Resend. Contacts with a phone get a
   WhatsApp message through the whatsapp-bot gateway (`WHATSAPP_BOT_URL`), which pairs once via
   QR code. The phone channel ignores the `whatsapp` contact flag: any phone number is messaged.
+- **A number is only saved once it is known to receive alerts.** The app calls
+  `POST /api/v1/contacts/test-message` first, which rehearses the emergency alert to that one
+  number and saves nothing. It applies to every phone number, not just WhatsApp ones, because the
+  phone channel ignores the flag anyway. The rehearsal carries no link: a real link needs a real
+  triggered event, and a fabricated one would show up in the user's own event history.
 - **Emergency links.** There is one unguessable link per notification, and only its SHA-256 hash
   is stored. Links expire after 30 days and never expose internal IDs.
 - **Locations.** Journey points are deleted after 24 hours unless they are tied to an emergency
