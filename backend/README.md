@@ -42,12 +42,12 @@ cd backend/code
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env        # fill in provider keys; .env is git-ignored
+cp .env.example .env
 set -a; source .env; set +a
 
-uvicorn app:app --reload --port 8000     # API
-python -m deadman.worker                 # worker loop (every DEADMAN_WORKER_INTERVAL_SECONDS)
-python -m deadman.worker --once          # single pass, e.g. from cron
+uvicorn app:app --reload --port 8000
+python -m deadman.worker                
+python -m deadman.worker --once 
 ```
 
 The WhatsApp gateway in `backend/whatsapp` is a separate Go service; see its own README.
